@@ -4,7 +4,7 @@ interface Room {
   code: number
   maxKategorien: number
   maxFragen: number
-  quiz: Kategorie[]
+  kategorien: Kategorie[]
 }
 
 interface Kategorie {
@@ -33,14 +33,9 @@ export default function App() {
 
   //Variablen für den aktuellen Raum
   const [room, setRoom] = useState<Room>()
+  const [editRoom, setEditRoom] = useState<Room>()
 
-  //Variablen für die Kategorien
-  const [kategorien, setKategorien] = useState<string[]>([])
-
-  useEffect(() => {
-    setKategorien(room?.quiz.map(item => item.name) || [""])
-  }, [room?.quiz])
-
+  useEffect(() => { setEditRoom(room) }, [room])
 
   return (
     <div>
@@ -106,8 +101,8 @@ export default function App() {
         {anzeige !== "room" ? "" : <>
           <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
           <button onClick={() => {
-            setKategorien(room?.quiz.map(item => item.name) || [""])
             setAnzeige("edit")
+            setEditRoom(room)
           }}>Board bearbeiten</button>
         </>}
       </>
@@ -139,21 +134,20 @@ export default function App() {
                   setRoom(data)
                 }
               })
-          }}>Neue Kategorie erstellen (Verbleibend: {(room?.maxKategorien || 0) - (room?.quiz.length || 0)})</button>
+          }}>Neue Kategorie erstellen (Verbleibend: {(room?.maxKategorien || 0) - (room?.kategorien.length || 0)})</button>
           <br /><br />
-          {room?.quiz.map(item => ( //Bearbeiten der Kategorien
+          {room?.kategorien.map(item => ( //Bearbeiten der Kategorien
             <>
-              Kategorie {item.id}: <input type="text" placeholder={"Kategorie " + item.id} value={kategorien[item.id - 1] || item.name} onChange={(e) => { //Kategoriename
-                const updatedKategorien = [...kategorien]
-                updatedKategorien[item.id - 1] = e.target.value
-                setKategorien(updatedKategorien)
+              Kategorie {item.id}: <input type="text" placeholder={"Kategorie " + item.id} value={editRoom?.kategorien.find(id => id.id === item.id)?.name} onChange={(e) => { //Kategoriename
+                setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
               }} />
 
               <button onClick={() => { //Speichern der Kategorie
+                const kategorieName = editRoom?.kategorien.find(id => id.id === item.id)?.name
                 fetch(`${backend}/update/kategorie/${room?.code}/${item.id}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name: kategorien[item.id - 1] })
+                  body: JSON.stringify({ name: kategorieName })
                 })
                   .then(async res => {
                     const data = await res.json()
@@ -167,7 +161,6 @@ export default function App() {
                   .then(data => {
                     if (data) {
                       setRoom(data)
-                      setKategorien(room?.quiz.map(item => item.name) || [""])
                     }
                   })
               }}>Speichern</button >
@@ -198,7 +191,7 @@ export default function App() {
           <br /><br /><br />
 
           <h1>Fragen</h1>
-          {room?.quiz.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
+          {room?.kategorien.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
             <>
               Fragen zur Kategorie: {item.name}
               <br />
@@ -224,23 +217,25 @@ export default function App() {
               <br /><br />
               {item.fragen.map(item => (
                 <>
-                Frage {item.id}:
-                <br />
-                <input type="text" placeholder="Frage" />
-                <input type="text" placeholder="Antwort" />
-                <input type="number" placeholder="Punkte" />
-                <br /><br />
+                  Frage {item.id}:
+                  <br />
+                  <input type="text" placeholder="Frage" />
+                  <input type="text" placeholder="Antwort" />
+                  <input type="number" placeholder="Punkte" />
+                  <br /><br />
                 </>
               ))}
 
               <br /><br /><br />
             </>
-            
+
           ))}
 
           <> {/* Zurück zum Board */}
-          <br /><br />
-          <button>Zurück zum Board</button>
+            <br /><br />
+            <button onClick={() => {
+              setAnzeige("room")
+              }}>Zurück zum Board</button>
           </>
         </>}
       </>

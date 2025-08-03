@@ -10,7 +10,7 @@ interface Room {
   code: number
   maxKategorien: number
   maxFragen: number
-  quiz: Kategorie[]
+  kategorien: Kategorie[]
 }
 
 interface Kategorie {
@@ -51,7 +51,7 @@ app.post("/create/room", (req, res) => {
     code: newCode,
     maxKategorien: normalMaxKategorien,
     maxFragen: normalMaxFragen,
-    quiz: []
+    kategorien: []
   }
   rooms.push(newRoom)
   return res.status(200).json(newRoom)
@@ -65,14 +65,14 @@ app.post("/create/kategorie/:code", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  if (rooms[findRoom].quiz.length === rooms[findRoom].maxKategorien) {
+  if (rooms[findRoom].kategorien.length === rooms[findRoom].maxKategorien) {
     return res.status(400).json({ message: "Die maximale Anzahl an Kategorien wurde erreicht!" })
   }
 
-  const newId = rooms[findRoom].quiz.length > 0 ? rooms[findRoom].quiz.length + 1 : 1
+  const newId = rooms[findRoom].kategorien.length > 0 ? rooms[findRoom].kategorien.length + 1 : 1
 
-  if (rooms[findRoom].quiz.length < rooms[findRoom].maxKategorien) {
-    rooms[findRoom].quiz.push({ id: newId, name: "", fragen: [] })
+  if (rooms[findRoom].kategorien.length < rooms[findRoom].maxKategorien) {
+    rooms[findRoom].kategorien.push({ id: newId, name: "", fragen: [] })
   }
 
   return res.status(200).json(rooms[findRoom])
@@ -88,13 +88,13 @@ app.post("/update/kategorie/:code/:id", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  const findKategorie = rooms[findRoom].quiz.findIndex(item => item.id === id)
+  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === id)
 
   if (findKategorie === -1) {
     return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
   }
 
-  rooms[findRoom].quiz[findKategorie] = { ...rooms[findRoom].quiz[findKategorie], name: req.body.name }
+  rooms[findRoom].kategorien[findKategorie] = { ...rooms[findRoom].kategorien[findKategorie], name: req.body.name }
 
   return res.status(200).json(rooms[findRoom])
 })
@@ -109,8 +109,8 @@ app.delete("/delete/kategorie/:code/:id", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  const updatedRoom = rooms[findRoom].quiz.filter(item => item.id !== id).map((item, index) => ({ ...item, id: index + 1 }))
-  rooms[findRoom].quiz = updatedRoom
+  const updatedRoom = rooms[findRoom].kategorien.filter(item => item.id !== id).map((item, index) => ({ ...item, id: index + 1 }))
+  rooms[findRoom].kategorien = updatedRoom
 
   return res.status(200).json(rooms[findRoom])
 })
@@ -125,20 +125,20 @@ app.post("/create/frage/:code/:kategorie", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  const findKategorie = rooms[findRoom].quiz.findIndex(item => item.id === kategorie)
+  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === kategorie)
 
   if (findKategorie === -1) {
     return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
   }
 
-  if (rooms[findRoom].quiz[findKategorie].fragen.length === rooms[findRoom].maxFragen) {
+  if (rooms[findRoom].kategorien[findKategorie].fragen.length === rooms[findRoom].maxFragen) {
     return res.status(400).json({ message: "Die maximale Anzahl an Fragen für diese Kategorie wurde erreicht!" })
   }
 
-    const newId = rooms[findRoom].quiz[findKategorie].fragen.length > 0 ? rooms[findRoom].quiz[findKategorie].fragen.length + 1 : 1
+    const newId = rooms[findRoom].kategorien[findKategorie].fragen.length > 0 ? rooms[findRoom].kategorien[findKategorie].fragen.length + 1 : 1
 
-  if (rooms[findRoom].quiz[findKategorie].fragen.length < rooms[findRoom].maxFragen) {
-    rooms[findRoom].quiz[findKategorie].fragen.push({ id: newId, frage: "", antwort: "", status: false, punkte: 0})
+  if (rooms[findRoom].kategorien[findKategorie].fragen.length < rooms[findRoom].maxFragen) {
+    rooms[findRoom].kategorien[findKategorie].fragen.push({ id: newId, frage: "", antwort: "", status: false, punkte: 0})
   }
 
   return res.status(200).json(rooms[findRoom])
