@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 
 interface Room {
   code: number
+  maxKategorien: number
+  maxFragen: number
   quiz: Kategorie[]
 }
 
@@ -12,7 +14,8 @@ interface Kategorie {
 }
 
 interface Frage {
-  text: string
+  frage: string
+  antwort: string
   id: number
   punkte: number
   status: boolean
@@ -30,6 +33,14 @@ export default function App() {
 
   //Variablen für den aktuellen Raum
   const [room, setRoom] = useState<Room>()
+
+  //Variablen für die Kategorien
+  const [kategorien, setKategorien] = useState<string[]>([])
+
+  useEffect(() => {
+    setKategorien(room?.quiz.map(item => item.name) || [""])
+  }, [room?.quiz])
+
 
   return (
     <div>
@@ -59,23 +70,180 @@ export default function App() {
           <br /><br /><br />
           Du hast bereits einen Raum? <button onClick={() => setAnzeige("login")}>Raum beitreten</button>
         </> : anzeige === "login" ? <> {/* Raum betreten */}
-        < input type="number" placeholder="Raum ID" value={roomID} onChange={(e) => {
-          const changeRoomID = e.target.value
-          if (changeRoomID.length <= 6) {
-            setRoomID(changeRoomID)
-          }
-        }} />
-        <br /><br /><br />
-        Noch kein Raum vorhanden? <button onClick={() => setAnzeige("create")}>Raum erstellen</button>
-      </> : ""}
-    </>
+          <input type="number" placeholder="Raum ID" value={roomID} onChange={(e) => {
+            const changeRoomID = e.target.value
+            if (changeRoomID.length <= 6) {
+              setRoomID(changeRoomID)
+            }
+          }} />
+          <button onClick={() => {
+            fetch(`${backend}/login/${roomID}`, {
+              method: 'GET'
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                  alert("Es ist ein Fehler aufgetreten: " + data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setAnzeige("room")
+                  setRoom(data)
+                }
+              })
+          }}>Raum beitreten</button>
+          <br /><br /><br />
+          Noch kein Raum vorhanden? <button onClick={() => setAnzeige("create")}>Raum erstellen</button>
+        </> : ""}
+      </>
 
-      {/* Aktiver Raum */ }
-  <>
-    {anzeige !== "room" ? "" : <>
-      <h1>{room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
-    </>}
-  </>
+      {/* Aktiver Raum */}
+      <>
+        {anzeige !== "room" ? "" : <>
+          <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
+          <button onClick={() => {
+            setKategorien(room?.quiz.map(item => item.name) || [""])
+            setAnzeige("edit")
+          }}>Board bearbeiten</button>
+        </>}
+      </>
+
+      {/* Board bearbeiten */}
+      <>
+        {anzeige !== "edit" ? "" : <>
+          <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
+
+          <br /><br /><br />
+
+          <h1>Kategorien</h1>
+
+          <button onClick={() => { //Kategorie hinzufügen
+            fetch(`${backend}/create/kategorie/${room?.code}`, {
+              method: 'POST',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                }
+              })
+          }}>Neue Kategorie erstellen (Verbleibend: {(room?.maxKategorien || 0) - (room?.quiz.length || 0)})</button>
+          <br /><br />
+          {room?.quiz.map(item => ( //Bearbeiten der Kategorien
+            <>
+              Kategorie {item.id}: <input type="text" placeholder={"Kategorie " + item.id} value={kategorien[item.id - 1] || item.name} onChange={(e) => { //Kategoriename
+                const updatedKategorien = [...kategorien]
+                updatedKategorien[item.id - 1] = e.target.value
+                setKategorien(updatedKategorien)
+              }} />
+
+              <button onClick={() => { //Speichern der Kategorie
+                fetch(`${backend}/update/kategorie/${room?.code}/${item.id}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name: kategorien[item.id - 1] })
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setKategorien(room?.quiz.map(item => item.name) || [""])
+                    }
+                  })
+              }}>Speichern</button >
+
+              <button onClick={() => { //Löschen der Kategorie
+                fetch(`${backend}/delete/kategorie/${room?.code}/${item.id}`, {
+                  method: 'DELETE',
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                    }
+                  })
+              }}>Löschen</button>
+              <br />
+            </>
+          ))}
+
+          <br /><br /><br />
+
+          <h1>Fragen</h1>
+          {room?.quiz.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
+            <>
+              Fragen zur Kategorie: {item.name}
+              <br />
+              <button onClick={() => { //Frage hinzufügen
+                fetch(`${backend}/create/frage/${room?.code}/${item.id}`, {
+                  method: 'POST',
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                    }
+                  })
+              }}>Neue Frage erstellen (Verbleibend: {(room?.maxFragen || 0) - (item.fragen.length)})</button>
+              <br /><br />
+              {item.fragen.map(item => (
+                <>
+                Frage {item.id}:
+                <br />
+                <input type="text" placeholder="Frage" />
+                <input type="text" placeholder="Antwort" />
+                <input type="number" placeholder="Punkte" />
+                <br /><br />
+                </>
+              ))}
+
+              <br /><br /><br />
+            </>
+            
+          ))}
+
+          <> {/* Zurück zum Board */}
+          <br /><br />
+          <button>Zurück zum Board</button>
+          </>
+        </>}
+      </>
     </div >
   );
 }
