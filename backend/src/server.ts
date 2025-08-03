@@ -78,9 +78,8 @@ app.post("/create/kategorie/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/kategorie/:code/:id", (req, res) => {
+app.post("/update/kategorien/:code", (req, res) => {
   const code = Number(req.params.code)
-  const id = Number(req.params.id)
 
   const findRoom = rooms.findIndex(item => item.code === code)
 
@@ -88,13 +87,8 @@ app.post("/update/kategorie/:code/:id", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === id)
 
-  if (findKategorie === -1) {
-    return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
-  }
-
-  rooms[findRoom].kategorien[findKategorie] = { ...rooms[findRoom].kategorien[findKategorie], name: req.body.name }
+  rooms[findRoom] = { ...rooms[findRoom], kategorien: req.body }
 
   return res.status(200).json(rooms[findRoom])
 })
@@ -135,11 +129,32 @@ app.post("/create/frage/:code/:kategorie", (req, res) => {
     return res.status(400).json({ message: "Die maximale Anzahl an Fragen für diese Kategorie wurde erreicht!" })
   }
 
-    const newId = rooms[findRoom].kategorien[findKategorie].fragen.length > 0 ? rooms[findRoom].kategorien[findKategorie].fragen.length + 1 : 1
+  const newId = rooms[findRoom].kategorien[findKategorie].fragen.length > 0 ? rooms[findRoom].kategorien[findKategorie].fragen.length + 1 : 1
 
   if (rooms[findRoom].kategorien[findKategorie].fragen.length < rooms[findRoom].maxFragen) {
-    rooms[findRoom].kategorien[findKategorie].fragen.push({ id: newId, frage: "", antwort: "", status: false, punkte: 0})
+    rooms[findRoom].kategorien[findKategorie].fragen.push({ id: newId, frage: "", antwort: "", status: false, punkte: 0 })
   }
+
+  return res.status(200).json(rooms[findRoom])
+})
+
+app.post("/update/fragen/:code/:kategorie", (req, res) => {
+  const code = Number(req.params.code)
+  const kategorie = Number(req.params.kategorie)
+  console.log(req.body)
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === kategorie)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
+  }
+
+  rooms[findRoom].kategorien[findKategorie] = { ...rooms[findRoom].kategorien[findKategorie], fragen: req.body }
 
   return res.status(200).json(rooms[findRoom])
 })

@@ -141,30 +141,6 @@ export default function App() {
               Kategorie {item.id}: <input type="text" placeholder={"Kategorie " + item.id} value={editRoom?.kategorien.find(id => id.id === item.id)?.name} onChange={(e) => { //Kategoriename
                 setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
               }} />
-
-              <button onClick={() => { //Speichern der Kategorie
-                const kategorieName = editRoom?.kategorien.find(id => id.id === item.id)?.name
-                fetch(`${backend}/update/kategorie/${room?.code}/${item.id}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name: kategorieName })
-                })
-                  .then(async res => {
-                    const data = await res.json()
-                    if (!res.ok) {
-                      alert(data.message)
-                      console.log(data.message)
-                      return null
-                    }
-                    return data
-                  })
-                  .then(data => {
-                    if (data) {
-                      setRoom(data)
-                    }
-                  })
-              }}>Speichern</button >
-
               <button onClick={() => { //Löschen der Kategorie
                 fetch(`${backend}/delete/kategorie/${room?.code}/${item.id}`, {
                   method: 'DELETE',
@@ -188,6 +164,29 @@ export default function App() {
             </>
           ))}
 
+          <br />
+          {room?.kategorien.length || 0 > 0 ?
+            <button onClick={() => { //Speichern der Kategorien
+              fetch(`${backend}/update/kategorien/${room?.code}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editRoom?.kategorien)
+              })
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data.message)
+                    console.log(data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setRoom(data)
+                  }
+                })
+            }}>Speichern</button> : ""}
           <br /><br /><br />
 
           <h1>Fragen</h1>
@@ -215,17 +214,41 @@ export default function App() {
                   })
               }}>Neue Frage erstellen (Verbleibend: {(room?.maxFragen || 0) - (item.fragen.length)})</button>
               <br /><br />
-              {item.fragen.map(item => (
+              {item.fragen.map(frage => (
                 <>
-                  Frage {item.id}:
+                  Frage {frage.id}:
                   <br />
-                  <input type="text" placeholder="Frage" />
+                  <input type="text" placeholder="Frage" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.frage} onChange={(e) => {
+                    setEditRoom(prevRoom => prevRoom ? {...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? {...id, fragen: id.fragen.map(res => res.id === frage.id ? {...res, frage: e.target.value} : res)} : id)} : prevRoom)
+                  }} />
                   <input type="text" placeholder="Antwort" />
                   <input type="number" placeholder="Punkte" />
                   <br /><br />
                 </>
               ))}
 
+              <br />
+              <button onClick={() => {
+                fetch(`${backend}/update/fragen/${room?.code}/${item.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editRoom?.kategorien.find(id => id.id === item.id)?.fragen)
+              })
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data.message)
+                    console.log(data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setRoom(data)
+                  }
+                })
+              }}>Speichern</button>
               <br /><br /><br />
             </>
 
@@ -235,7 +258,7 @@ export default function App() {
             <br /><br />
             <button onClick={() => {
               setAnzeige("room")
-              }}>Zurück zum Board</button>
+            }}>Zurück zum Board</button>
           </>
         </>}
       </>
