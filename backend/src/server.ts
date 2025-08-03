@@ -80,7 +80,7 @@ app.post("/create/kategorie/:code", (req, res) => {
 
 app.post("/update/kategorien/:code", (req, res) => {
   const code = Number(req.params.code)
-
+  console.log(req.body)
   const findRoom = rooms.findIndex(item => item.code === code)
 
   if (findRoom === -1) {
@@ -103,8 +103,7 @@ app.delete("/delete/kategorie/:code/:id", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  const updatedRoom = rooms[findRoom].kategorien.filter(item => item.id !== id).map((item, index) => ({ ...item, id: index + 1 }))
-  rooms[findRoom].kategorien = updatedRoom
+  rooms[findRoom].kategorien = rooms[findRoom].kategorien.filter(item => item.id !== id).map((item, index) => ({ ...item, id: index + 1 }))
 
   return res.status(200).json(rooms[findRoom])
 })
@@ -141,7 +140,7 @@ app.post("/create/frage/:code/:kategorie", (req, res) => {
 app.post("/update/fragen/:code/:kategorie", (req, res) => {
   const code = Number(req.params.code)
   const kategorie = Number(req.params.kategorie)
-  console.log(req.body)
+
   const findRoom = rooms.findIndex(item => item.code === code)
 
   if (findRoom === -1) {
@@ -155,6 +154,28 @@ app.post("/update/fragen/:code/:kategorie", (req, res) => {
   }
 
   rooms[findRoom].kategorien[findKategorie] = { ...rooms[findRoom].kategorien[findKategorie], fragen: req.body }
+
+  return res.status(200).json(rooms[findRoom])
+})
+
+app.delete("/delete/frage/:code/:kategorie/:id", (req, res) => {
+  const code = Number(req.params.code)
+  const kategorie = Number(req.params.kategorie)
+  const id = Number(req.params.id)
+
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === kategorie)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
+  }
+
+  rooms[findRoom].kategorien[findKategorie].fragen = rooms[findRoom].kategorien[findKategorie].fragen.filter(item => item.id !== id).map((item, index) => ({...item, id: index + 1}))
 
   return res.status(200).json(rooms[findRoom])
 })

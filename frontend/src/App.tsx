@@ -35,7 +35,33 @@ export default function App() {
   const [room, setRoom] = useState<Room>()
   const [editRoom, setEditRoom] = useState<Room>()
 
-  useEffect(() => { setEditRoom(room) }, [room])
+  function reloadEditRoom(oldRoom: Room | undefined, newRoom: Room) {
+    if (!oldRoom) return newRoom
+
+    return {
+      ...newRoom,
+      kategorien: newRoom.kategorien.map(newKat => {
+        const oldKat = oldRoom.kategorien.find(oldKat => oldKat.id === newKat.id)
+        if (!oldKat) return newKat
+
+        return {
+          ...newKat,
+          name: oldKat.name ?? newKat.name,
+          fragen: newKat.fragen.map(newFrage => {
+            const oldFrage = oldKat.fragen.find(oldFrage => oldFrage.id === newFrage.id)
+            if (!oldFrage) return newFrage;
+
+            return {
+              ...newFrage,
+              frage: oldFrage.frage ?? newFrage.frage,
+              antwort: oldFrage.antwort ?? newFrage.antwort,
+              punkte: oldFrage.punkte ?? newFrage.punkte,
+            }
+          })
+        }
+      })
+    }
+  }
 
   return (
     <div>
@@ -103,6 +129,7 @@ export default function App() {
           <button onClick={() => {
             setAnzeige("edit")
             setEditRoom(room)
+
           }}>Board bearbeiten</button>
         </>}
       </>
@@ -132,12 +159,13 @@ export default function App() {
               .then(data => {
                 if (data) {
                   setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
                 }
               })
           }}>Neue Kategorie erstellen (Verbleibend: {(room?.maxKategorien || 0) - (room?.kategorien.length || 0)})</button>
           <br /><br />
           {room?.kategorien.map(item => ( //Bearbeiten der Kategorien
-            <>
+            <div key={item.id}>
               Kategorie {item.id}: <input type="text" placeholder={"Kategorie " + item.id} value={editRoom?.kategorien.find(id => id.id === item.id)?.name} onChange={(e) => { //Kategoriename
                 setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
               }} />
@@ -157,11 +185,12 @@ export default function App() {
                   .then(data => {
                     if (data) {
                       setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
                     }
                   })
               }}>Löschen</button>
               <br />
-            </>
+            </div>
           ))}
 
           <br />
@@ -184,6 +213,7 @@ export default function App() {
                 .then(data => {
                   if (data) {
                     setRoom(data)
+                    setEditRoom(prev => reloadEditRoom(prev, data))
                   }
                 })
             }}>Speichern</button> : ""}
@@ -191,7 +221,7 @@ export default function App() {
 
           <h1>Fragen</h1>
           {room?.kategorien.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
-            <>
+            <div key={item.id}>
               Fragen zur Kategorie: {item.name}
               <br />
               <button onClick={() => { //Frage hinzufügen
@@ -210,47 +240,73 @@ export default function App() {
                   .then(data => {
                     if (data) {
                       setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
                     }
                   })
               }}>Neue Frage erstellen (Verbleibend: {(room?.maxFragen || 0) - (item.fragen.length)})</button>
               <br /><br />
-              {item.fragen.map(frage => (
-                <>
+              {item.fragen.map(frage => ( //Bearbeiten der Fragen
+                <div key={frage.id}>
                   Frage {frage.id}:
                   <br />
                   <input type="text" placeholder="Frage" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.frage} onChange={(e) => {
-                    setEditRoom(prevRoom => prevRoom ? {...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? {...id, fragen: id.fragen.map(res => res.id === frage.id ? {...res, frage: e.target.value} : res)} : id)} : prevRoom)
+                    setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, frage: e.target.value } : res) } : id) } : prevRoom)
                   }} />
-                  <input type="text" placeholder="Antwort" />
-                  <input type="number" placeholder="Punkte" />
+                  <input type="text" placeholder="Antwort" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.antwort} onChange={(e) => {
+                    setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, antwort: e.target.value } : res) } : id) } : prevRoom)
+                  }} />
+                  <input type="number" placeholder="Punkte" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.punkte} onChange={(e) => {
+                    setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, punkte: Number(e.target.value) } : res) } : id) } : prevRoom)
+                  }} />
+                  <button onClick={() => {
+                    fetch(`${backend}/delete/frage/${room?.code}/${item.id}/${frage.id}`, {
+                      method: 'DELETE',
+                    })
+                      .then(async res => {
+                        const data = await res.json()
+                        if (!res.ok) {
+                          alert(data.message)
+                          console.log(data.message)
+                          return null
+                        }
+                        return data
+                      })
+                      .then(data => {
+                        if (data) {
+                          setRoom(data)
+                          setEditRoom(prev => reloadEditRoom(prev, data))
+                        }
+                      })
+                  }}>Löschen</button>
                   <br /><br />
-                </>
+                </div>
               ))}
 
               <br />
-              <button onClick={() => {
+              <button onClick={() => { //Speichern der Fragen
                 fetch(`${backend}/update/fragen/${room?.code}/${item.id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editRoom?.kategorien.find(id => id.id === item.id)?.fragen)
-              })
-                .then(async res => {
-                  const data = await res.json()
-                  if (!res.ok) {
-                    alert(data.message)
-                    console.log(data.message)
-                    return null
-                  }
-                  return data
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(editRoom?.kategorien.find(id => id.id === item.id)?.fragen)
                 })
-                .then(data => {
-                  if (data) {
-                    setRoom(data)
-                  }
-                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prevEditRoom => reloadEditRoom(prevEditRoom, data))
+                    }
+                  })
               }}>Speichern</button>
               <br /><br /><br />
-            </>
+            </div>
 
           ))}
 
