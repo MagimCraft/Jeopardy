@@ -4,6 +4,9 @@ interface Room {
   code: number
   maxKategorien: number
   maxFragen: number
+  quizArt: string
+  sortPunkte: boolean
+  sortRichtung: string
   kategorien: Kategorie[]
 }
 
@@ -30,9 +33,15 @@ export default function App() {
 
   //Variablen für den Admin Control
   const [rooms, setRooms] = useState<Room[]>([])
+  const [kategorien, setKategorien] = useState<number>()
+  const [fragen, setFragen] = useState<number>()
+  const [adminEdit, setAdminEdit] = useState<number>()
 
   //Variablen für die Anzeige
   const [anzeige, setAnzeige] = useState("login")
+  const [anzeige2, setAnzeige2] = useState("board")
+  const [selectedFrage, setSelectedFrage] = useState<number>()
+  const [selectedKategorie, setSelectedKategorie] = useState<number>()
 
   // Variablen für die Räume
   const [roomID, setRoomID] = useState("")
@@ -94,6 +103,7 @@ export default function App() {
                 if (data) {
                   setRooms(data)
                   setAnzeige("admin")
+                  setPw("")
                 }
               })
           }}>
@@ -101,6 +111,132 @@ export default function App() {
           </button>
           <br /><br /><br />
           <button onClick={() => setAnzeige("login")}>Zurück</button>
+        </>}
+      </>
+
+      {/* Admin Control */}
+      <>
+        {anzeige !== "admin" ? "" : <>
+          <h1>Admin Panel</h1>
+          <button onClick={() => setAnzeige("login")}>Abmelden</button>
+          <br /><br /><br />
+          <button onClick={() => {
+            fetch(`${backend}/rooms`, {
+              method: 'GET',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                  alert("Es ist ein Fehler aufgetreten: " + data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  console.log("Es wurden neue Daten runtergeladen!")
+                  setRooms(data)
+                }
+              })
+          }}>Räume Aktualisieren</button>
+          <br /><br /><br />
+          <table>
+            <thead>
+              <tr>
+                <th>Raum</th>
+                <th>Bearbeiten</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rooms.map((item) => (
+                <tr key={item.code}>
+                  <td>{item.code}</td>
+                  <td><button onClick={() => {
+                    setAnzeige("adminEdit")
+                    setAdminEdit(item.code)
+                    setFragen(item.maxFragen)
+                    setKategorien(item.maxKategorien)
+                  }}>Bearbeiten</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>}
+      </>
+
+      {/* Admin Room Edit */}
+      <>
+        {anzeige !== "adminEdit" ? "" : <>
+          <h1>Bearbeite den Raum {adminEdit}</h1>
+          <button onClick={() => setAnzeige("admin")}>Zurück</button>
+          <br /><br /><br />
+          Kategorien-Menge:&nbsp;
+          <input type="number" placeholder="Fragen-Menge" value={kategorien} onChange={(e) => setKategorien(Number(e.target.value))} />
+          <br />
+          Fragen-Menge:&nbsp;
+          <input type="number" placeholder="Fragen-Menge" value={fragen} onChange={(e) => setFragen(Number(e.target.value))} />
+          <br />
+          <button onClick={() => {
+            fetch(`${backend}/admin/update/menge/${adminEdit}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ kategorien: kategorien, fragen: fragen })
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                  alert("Es ist ein Fehler aufgetreten: " + data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRooms(data)
+                }
+              })
+          }}>
+            Save
+          </button>
+          <br /><br /><br />
+          <h1>Spielbrett</h1>
+           <table>
+                <tbody>
+                  <tr>
+                    {rooms.find(item => item.code === adminEdit)?.kategorien.map((item, index) => (
+                      <td key={index}>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>
+                                {item.name.trim() === "" ? '\u00A0' : item.name}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {item.fragen.map((singleItem, i) => (
+                              <tr key={i}>
+                                <td>
+                                  Punkte: {singleItem.punkte}
+                                  <br />
+                                  Frage: {singleItem.frage}
+                                  <br />
+                                  Antwort: {singleItem.antwort}
+                                  <br />
+                                  <br />
+                                  <br />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
         </>}
       </>
 
@@ -181,43 +317,120 @@ export default function App() {
 
           }}>Board bearbeiten</button>
 
-          <> {/* Board */}
-            <table>
-              <tbody>
-                <tr>
-                  {room?.kategorien.map((item, index) => (
-                    <td key={index}>
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>
-                              {item.name}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {item.fragen.map((singleItem, i) => (
-                            <tr key={i}>
-                              <td>
-                                <button>
-                                  {singleItem.punkte}
-                                </button>
-                              </td>
+          {anzeige2 !== "board" ? "" : //Board
+            <>
+              <table>
+                <tbody>
+                  <tr>
+                    {room?.kategorien.map((item, index) => (
+                      <td key={index}>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>
+                                {item.name.trim() === "" ? '\u00A0' : item.name}
+                              </th>
                             </tr>
-                          ))}
-                          {[...Array(room.maxFragen - item.fragen.length)].map((_, i2) => (
-                            <tr key={i2}>
-                              <td><button>&nbsp;</button></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </>
+                          </thead>
+                          <tbody>
+                            {(room.sortPunkte ? [...item.fragen].sort((a, b) => {
+                              if (room.sortRichtung === "aufsteigend") {
+                                return a.punkte >= b.punkte ? 1 : -1
+                              } else return a.punkte >= b.punkte ? -1 : 1
+                            }) : item.fragen).map((singleItem, i) => (
+                              <tr key={i}>
+                                <td>
+                                  <button onClick={() => {
+                                    setSelectedFrage(singleItem.id)
+                                    setSelectedKategorie(item.id)
+                                    if (room.quizArt === "f-a") {
+                                      setAnzeige2("frage")
+                                    }
+                                    if (room.quizArt === "a-f") {
+                                      setAnzeige2("antwort")
+                                    }
+                                  }}>
+                                    {singleItem.status ? <s>{singleItem.punkte}</s> : singleItem.punkte}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                            {[...Array(room.maxFragen - item.fragen.length)].map((_, i2) => (
+                              <tr key={i2}>
+                                <td><button>&nbsp;</button></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </>
+          }
+
+          {anzeige2 !== "frage" ? "" : //Frage
+            <>
+              <h1>{room?.kategorien.find(item => item.id === selectedKategorie)?.fragen.find(item => item.id === selectedFrage)?.frage}</h1>
+              <button onClick={() => {
+                if (room?.quizArt === "f-a") {
+                  setAnzeige2("antwort")
+                }
+                if (room?.quizArt === "a-f") {
+                  fetch(`${backend}/update/status/${room?.code}/${selectedKategorie}/${selectedFrage}`, {
+                    method: 'POST',
+                  })
+                    .then(async res => {
+                      const data = await res.json()
+                      if (!res.ok) {
+                        alert(data.message)
+                        console.log(data.message)
+                        return null
+                      }
+                      return data
+                    })
+                    .then(data => {
+                      if (data) {
+                        setRoom(data)
+                        setAnzeige2("board")
+                      }
+                    })
+                }
+              }}>{room?.quizArt === "f-a" ? "Antwort anzeigen" : "Zurück zum Board"}</button>
+            </>
+          }
+
+          {anzeige2 !== "antwort" ? "" : //Antwort
+            <>
+              <h1>{room?.kategorien.find(item => item.id === selectedKategorie)?.fragen.find(item => item.id === selectedFrage)?.antwort}</h1>
+              <button onClick={() => {
+                if (room?.quizArt === "f-a") {
+                  fetch(`${backend}/update/status/${room?.code}/${selectedKategorie}/${selectedFrage}`, {
+                    method: 'POST',
+                  })
+                    .then(async res => {
+                      const data = await res.json()
+                      if (!res.ok) {
+                        alert(data.message)
+                        console.log(data.message)
+                        return null
+                      }
+                      return data
+                    })
+                    .then(data => {
+                      if (data) {
+                        setRoom(data)
+                        setAnzeige2("board")
+                      }
+                    })
+                }
+                if (room?.quizArt === "a-f") {
+                  setAnzeige2("frage")
+                }
+              }}>{room?.quizArt === "f-a" ? "Zurück zum Board" : "Frage anzeigen"}</button>
+            </>
+          }
         </>}
       </>
 
@@ -225,6 +438,101 @@ export default function App() {
       <>
         {anzeige !== "edit" ? "" : <>
           <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
+          <button onClick={() => {
+            fetch(`${backend}/rooms/${room?.code}`, {
+              method: 'GET',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>Neu laden</button>
+          <br /><br /><br />
+
+
+
+          <h1>Einstellungen</h1>
+
+          {/* Change Quiz Art */}
+          Du möchtest lieber das Orignale Jeopardy spielen?&nbsp;
+          <button onClick={() => {
+            fetch(`${backend}/update/quizArt/${room?.code}`, {
+              method: 'POST',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>{room?.quizArt === "f-a" ? "ㅤ" : "X"}</button>
+          <br />
+          (<b>Aktuelle Version:</b> {room?.quizArt === "f-a" ? "Normales Quiz Prinzip - Zuerst die Frage, dann die Antwort" : "Jeopardy Prinzip - Zuerst die Antwort, dann die Frage"})
+
+          <br /><br /><br />
+
+          Fragen auf dem Board nach Punkten sortieren?&nbsp;
+          <button onClick={() => {
+            fetch(`${backend}/update/sortPunkte/${room?.code}`, {
+              method: 'POST',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>{!room?.sortPunkte ? "ㅤ" : "X"}</button>
+          {!room?.sortPunkte ? "" : <button onClick={() => {
+            fetch(`${backend}/update/sortRichtung/${room?.code}`, {
+              method: 'POST',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>{room?.sortRichtung === "aufsteigend" ? "↑" : "↓"}</button>}
+          &nbsp;{!room?.sortPunkte ? "" : room.sortRichtung === "aufsteigend" ? "(Aufsteigend)" : "(Absteigend)"}
 
           <br /><br /><br />
 
@@ -305,6 +613,8 @@ export default function App() {
                 })
             }}>Speichern</button> : ""}
           <br /><br /><br />
+
+
 
           <h1>Fragen</h1>
           {room?.kategorien.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
@@ -405,6 +715,6 @@ export default function App() {
           </>
         </>}
       </>
-    </div >
+    </div>
   );
 }
