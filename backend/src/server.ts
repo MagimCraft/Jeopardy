@@ -3,6 +3,9 @@ import cors from 'cors'
 const app = express()
 const port = 3001
 
+//Admin Login
+const password = "12345"
+
 const normalMaxKategorien = 5
 const normalMaxFragen = 5
 
@@ -43,6 +46,16 @@ app.get("/login/:code", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum mit diesem Code gefunden" })
   }
   return res.status(200).json(rooms[findRoom])
+})
+
+app.post("/login/admin",  (req, res) => {
+  const pw = req.body.pw
+
+  if (pw !== password) {
+    return res.status(400).json({message:"Das eingegebene Passwort ist falsch!"})
+  }
+
+  return res.status(200).json(rooms)
 })
 
 app.post("/create/room", (req, res) => {

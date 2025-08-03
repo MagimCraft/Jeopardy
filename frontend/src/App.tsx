@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface Room {
   code: number
@@ -24,6 +24,12 @@ interface Frage {
 export default function App() {
   //BACKEND URL
   const backend = "http://localhost:3001"
+
+  //Variablen für den Admin Login
+  const [pw, setPw] = useState("")
+
+  //Variablen für den Admin Control
+  const [rooms, setRooms] = useState<Room[]>([])
 
   //Variablen für die Anzeige
   const [anzeige, setAnzeige] = useState("login")
@@ -65,8 +71,42 @@ export default function App() {
 
   return (
     <div>
+      {/* Admin Login */}
+      <>
+        {anzeige !== "adminLogin" ? "" : <>
+          <input type="text" placeholder="Admin Passwort" value={pw} onChange={(e) => setPw(e.target.value)} />
+          <button onClick={() => {
+            fetch(`${backend}/login/admin`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pw: pw })
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                  alert("Es ist ein Fehler aufgetreten: " + data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRooms(data)
+                  setAnzeige("admin")
+                }
+              })
+          }}>
+            Login
+          </button>
+          <br /><br /><br />
+          <button onClick={() => setAnzeige("login")}>Zurück</button>
+        </>}
+      </>
+
       {/* Raum betreten / erstellen */}
       <>
+
         {anzeige === "create" ? <> {/* Raum erstellen */}
           <button onClick={() => {
             fetch(`${backend}/create/room`, {
@@ -120,17 +160,64 @@ export default function App() {
           <br /><br /><br />
           Noch kein Raum vorhanden? <button onClick={() => setAnzeige("create")}>Raum erstellen</button>
         </> : ""}
+        {anzeige === "create" || anzeige === "login" ? <> {/* Admin Login Button */}
+          <br /><br /><br /><br /><br />
+          Bist du ein Admin?&nbsp;
+          <button onClick={() => setAnzeige("adminLogin")}>
+            Login
+          </button>
+        </> : ""}
       </>
 
       {/* Aktiver Raum */}
       <>
         {anzeige !== "room" ? "" : <>
           <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
+          <button onClick={() => setAnzeige("login")}>Zurück</button>
+          <br /><br /><br />
           <button onClick={() => {
             setAnzeige("edit")
             setEditRoom(room)
 
           }}>Board bearbeiten</button>
+
+          <> {/* Board */}
+            <table>
+              <tbody>
+                <tr>
+                  {room?.kategorien.map((item, index) => (
+                    <td key={index}>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>
+                              {item.name}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {item.fragen.map((singleItem, i) => (
+                            <tr key={i}>
+                              <td>
+                                <button>
+                                  {singleItem.punkte}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {[...Array(room.maxFragen - item.fragen.length)].map((_, i2) => (
+                            <tr key={i2}>
+                              <td><button>&nbsp;</button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </>
         </>}
       </>
 
@@ -194,7 +281,7 @@ export default function App() {
           ))}
 
           <br />
-          {room?.kategorien.length || 0 > 0 ?
+          {room?.kategorien.length || -1 > 0 ?
             <button onClick={() => { //Speichern der Kategorien
               fetch(`${backend}/update/kategorien/${room?.code}`, {
                 method: 'POST',
