@@ -4,10 +4,18 @@ interface Room {
   code: number
   maxKategorien: number
   maxFragen: number
+  maxSpieler: number
   quizArt: string
   sortPunkte: boolean
   sortRichtung: string
+  spieler: Spieler[]
   kategorien: Kategorie[]
+}
+
+interface Spieler {
+  name: string
+  id: number
+  punkte: number
 }
 
 interface Kategorie {
@@ -35,6 +43,7 @@ export default function App() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [kategorien, setKategorien] = useState<number>()
   const [fragen, setFragen] = useState<number>()
+  const [spieler, setSpieler] = useState<number>()
   const [adminEdit, setAdminEdit] = useState<number>()
 
   //Variablen für die Anzeige
@@ -55,6 +64,17 @@ export default function App() {
 
     return {
       ...newRoom,
+      spieler: newRoom.spieler.map(newSpi => {
+        const oldSpi = oldRoom.spieler.find(oldSpi => oldSpi.id === newSpi.id)
+        if (!oldSpi) return newSpi
+
+        return {
+          ...newSpi,
+          name: oldSpi.name ?? newSpi.name,
+          punkte: oldSpi.punkte ?? newSpi.punkte
+        }
+      }),
+
       kategorien: newRoom.kategorien.map(newKat => {
         const oldKat = oldRoom.kategorien.find(oldKat => oldKat.id === newKat.id)
         if (!oldKat) return newKat
@@ -157,6 +177,7 @@ export default function App() {
                     setAdminEdit(item.code)
                     setFragen(item.maxFragen)
                     setKategorien(item.maxKategorien)
+                    setSpieler(item.maxSpieler)
                   }}>Bearbeiten</button></td>
                 </tr>
               ))}
@@ -170,6 +191,26 @@ export default function App() {
         {anzeige !== "adminEdit" ? "" : <>
           <h1>Bearbeite den Raum {adminEdit}</h1>
           <button onClick={() => setAnzeige("admin")}>Zurück</button>
+          <button onClick={() => {
+            fetch(`${backend}/rooms`, {
+              method: 'GET',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                  alert("Es ist ein Fehler aufgetreten: " + data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  console.log("Es wurden neue Daten runtergeladen!")
+                  setRooms(data)
+                }
+              })
+          }}>Raum aktualisieren</button>
           <br /><br /><br />
           Kategorien-Menge:&nbsp;
           <input type="number" placeholder="Fragen-Menge" value={kategorien} onChange={(e) => setKategorien(Number(e.target.value))} />
@@ -177,11 +218,14 @@ export default function App() {
           Fragen-Menge:&nbsp;
           <input type="number" placeholder="Fragen-Menge" value={fragen} onChange={(e) => setFragen(Number(e.target.value))} />
           <br />
+          Spieler-Menge:&nbsp;
+          <input type="number" placeholder="Spieler-Menge" value={spieler} onChange={(e) => setSpieler(Number(e.target.value))} />
+          <br />
           <button onClick={() => {
             fetch(`${backend}/admin/update/menge/${adminEdit}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ kategorien: kategorien, fragen: fragen })
+              body: JSON.stringify({ kategorien: kategorien, fragen: fragen, spieler: spieler })
             })
               .then(async res => {
                 const data = await res.json()
@@ -202,41 +246,67 @@ export default function App() {
           </button>
           <br /><br /><br />
           <h1>Spielbrett</h1>
-           <table>
-                <tbody>
-                  <tr>
-                    {rooms.find(item => item.code === adminEdit)?.kategorien.map((item, index) => (
-                      <td key={index}>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>
-                                {item.name.trim() === "" ? '\u00A0' : item.name}
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {item.fragen.map((singleItem, i) => (
-                              <tr key={i}>
-                                <td>
-                                  Punkte: {singleItem.punkte}
-                                  <br />
-                                  Frage: {singleItem.frage}
-                                  <br />
-                                  Antwort: {singleItem.antwort}
-                                  <br />
-                                  <br />
-                                  <br />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
+          <table>
+            <tbody>
+              <tr>
+                {rooms.find(item => item.code === adminEdit)?.kategorien.map((item, index) => (
+                  <td key={index}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>
+                            {item.name.trim() === "" ? '\u00A0' : item.name}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {item.fragen.map((singleItem, i) => (
+                          <tr key={i}>
+                            <td>
+                              Punkte: {singleItem.punkte}
+                              <br />
+                              Frage: {singleItem.frage}
+                              <br />
+                              Antwort: {singleItem.antwort}
+                              <br />
+                              <br />
+                              <br />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+          <br /><br /><br />
+          <h1>Spieler</h1>
+          <table>
+            <tbody>
+              <tr>
+                {rooms.find(item => item.code === adminEdit)?.spieler.map((item, index) => (
+                  <td key={index}>
+                    <table>
+                      <tbody>
+                        <tr>
+                          <td>
+                            Spielername:&nbsp;{item.name}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            Punkte:&nbsp;{item.punkte}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
         </>}
       </>
 
@@ -316,6 +386,31 @@ export default function App() {
             setEditRoom(room)
 
           }}>Board bearbeiten</button>
+          <button onClick={() => {
+            setAnzeige("spieler")
+            setEditRoom(room)
+
+          }}>Spieler bearbeiten</button>
+          <button onClick={() => {
+            fetch(`${backend}/rooms/restart/${room?.code}`, {
+              method: 'POST',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>Restart Game</button>
 
           {anzeige2 !== "board" ? "" : //Board
             <>
@@ -431,6 +526,76 @@ export default function App() {
               }}>{room?.quizArt === "f-a" ? "Zurück zum Board" : "Frage anzeigen"}</button>
             </>
           }
+
+
+          <> {/* Spieler */}
+            <table>
+              <tbody>
+                <tr>
+                  {room?.spieler.map((item, index) => (
+                    <td key={index}>
+                      <table>
+                        <tbody>
+                          <tr>
+                            <td>
+                              {item.name}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              Punkte:&nbsp;{item.punkte}
+                            </td>
+                          </tr>
+                          {(room.quizArt === "f-a" && anzeige2 === "antwort") || (room.quizArt === "a-f" && anzeige2 === "frage") ? <>
+                            <button onClick={() => {
+                              fetch(`${backend}/punkte/add/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
+                                method: 'POST',
+                              })
+                                .then(async res => {
+                                  const data = await res.json()
+                                  if (!res.ok) {
+                                    alert(data.message)
+                                    console.log(data.message)
+                                    return null
+                                  }
+                                  return data
+                                })
+                                .then(data => {
+                                  if (data) {
+                                    setRoom(data)
+                                    setEditRoom(prev => reloadEditRoom(prev, data))
+                                  }
+                                })
+                            }}>+</button>
+                            <button onClick={() => {
+                              fetch(`${backend}/punkte/remove/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
+                                method: 'POST',
+                              })
+                                .then(async res => {
+                                  const data = await res.json()
+                                  if (!res.ok) {
+                                    alert(data.message)
+                                    console.log(data.message)
+                                    return null
+                                  }
+                                  return data
+                                })
+                                .then(data => {
+                                  if (data) {
+                                    setRoom(data)
+                                    setEditRoom(prev => reloadEditRoom(prev, data))
+                                  }
+                                })
+                            }}>-</button>
+                          </> : ""}
+                        </tbody>
+                      </table>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </>
         </>}
       </>
 
@@ -587,7 +752,6 @@ export default function App() {
               <br />
             </div>
           ))}
-
           <br />
           {room?.kategorien.length || -1 > 0 ?
             <button onClick={() => { //Speichern der Kategorien
@@ -713,6 +877,115 @@ export default function App() {
               setAnzeige("room")
             }}>Zurück zum Board</button>
           </>
+        </>}
+      </>
+
+      {/* Spieler bearbeiten */}
+      <>
+        {anzeige !== "spieler" ? "" : <>
+          <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
+          <button onClick={() => {
+            fetch(`${backend}/rooms/${room?.code}`, {
+              method: 'GET',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>Neu laden</button>
+          <br /><br /><br />
+
+          <h1>Spieler</h1>
+
+          <button onClick={() => { //Spieler hinzufügen
+            fetch(`${backend}/create/spieler/${room?.code}`, {
+              method: 'POST',
+            })
+              .then(async res => {
+                const data = await res.json()
+                if (!res.ok) {
+                  alert(data.message)
+                  console.log(data.message)
+                  return null
+                }
+                return data
+              })
+              .then(data => {
+                if (data) {
+                  setRoom(data)
+                  setEditRoom(prev => reloadEditRoom(prev, data))
+                }
+              })
+          }}>Neuen Spieler erstellen (Verbleibend: {(room?.maxSpieler || 0) - (room?.spieler.length || 0)})</button>
+          <br /><br />
+          {room?.spieler.map(item => ( //Bearbeiten des Spielers
+            <div key={item.id}>
+              Spieler {item.id}: <input type="text" placeholder={"Spieler " + item.id} value={editRoom?.spieler.find(id => id.id === item.id)?.name} onChange={(e) => { //Spielername
+                setEditRoom(prevRoom => prevRoom ? { ...prevRoom, spieler: prevRoom.spieler.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
+              }} />
+              <input type="text" placeholder="Punkte" value={editRoom?.spieler.find(id => id.id === item.id)?.punkte} onChange={(e) => { //Spielername
+                setEditRoom(prevRoom => prevRoom ? { ...prevRoom, spieler: prevRoom.spieler.map(id => id.id === item.id ? { ...id, punkte: Number(e.target.value) } : id) } : prevRoom)
+              }} />
+              <button onClick={() => { //Löschen des Spielers
+                fetch(`${backend}/delete/spieler/${room?.code}/${item.id}`, {
+                  method: 'DELETE',
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
+                    }
+                  })
+              }}>Löschen</button>
+              <br />
+            </div>
+          ))}
+          <br />
+          {room?.spieler.length || -1 > 0 ?
+            <button onClick={() => { //Speichern der Spieler
+              fetch(`${backend}/update/spieler/${room?.code}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editRoom?.spieler)
+              })
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data.message)
+                    console.log(data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setRoom(data)
+                    setEditRoom(prev => reloadEditRoom(prev, data))
+                  }
+                })
+            }}>Speichern</button> : ""}
+          <br /><br /><br />
+          <button onClick={() => setAnzeige("room")}>Zurück zum Board</button>
         </>}
       </>
     </div>

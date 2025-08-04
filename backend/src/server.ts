@@ -9,15 +9,24 @@ const password = "12345"
 
 let normalMaxKategorien = 5
 let normalMaxFragen = 5
+let normalMaxSpieler = 4
 
 interface Room {
   code: number
   maxKategorien: number
   maxFragen: number
+  maxSpieler: number
   quizArt: string
   sortPunkte: boolean
   sortRichtung: string
+  spieler: Spieler[]
   kategorien: Kategorie[]
+}
+
+interface Spieler {
+  name: string
+  id: number
+  punkte: number
 }
 
 interface Kategorie {
@@ -39,11 +48,13 @@ const rooms: Room[] = []
 app.use(cors())
 app.use(express.json())
 
-app.get("/rooms", (req, res) => {
+//Allgemeines der Räume
+
+app.get("/rooms", (req, res) => { //Zeige alle Räume an
   return res.json(rooms)
 })
 
-app.get("/rooms/:code", (req, res) => {
+app.get("/rooms/:code", (req, res) => { //Zeige einen speziellen Raum an
   const code = Number(req.params.code)
 
   const findRoom = rooms.findIndex(item => item.code === code)
@@ -55,7 +66,10 @@ app.get("/rooms/:code", (req, res) => {
   return res.json(rooms[findRoom])
 })
 
-app.get("/login/:code", (req, res) => {
+
+//Start-Screen
+
+app.get("/login/:code", (req, res) => { //Trete einem Raum bei
   const code = Number(req.params.code)
   const findRoom = rooms.findIndex(item => item.code === code)
   if (findRoom === -1) {
@@ -64,7 +78,7 @@ app.get("/login/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/login/admin", (req, res) => {
+app.post("/login/admin", (req, res) => { //Melde dich als Admin an
   const pw = req.body.pw
 
   if (pw !== password) {
@@ -74,22 +88,26 @@ app.post("/login/admin", (req, res) => {
   return res.status(200).json(rooms)
 })
 
-app.post("/create/room", (req, res) => {
+app.post("/create/room", (req, res) => { //Erstelle einen Raum
   const newCode = rooms.length > 0 ? Math.max(...rooms.map(item => item.code)) + 1 : 100000
   const newRoom = {
     code: newCode,
     maxKategorien: normalMaxKategorien,
     maxFragen: normalMaxFragen,
+    maxSpieler: normalMaxSpieler,
     quizArt: "f-a",
     sortPunkte: false,
     sortRichtung: "aufsteigend",
+    spieler: [],
     kategorien: []
   }
   rooms.push(newRoom)
   return res.status(200).json(newRoom)
 })
 
-app.post("/create/kategorie/:code", (req, res) => {
+//Board-Bearbeitung
+
+app.post("/create/kategorie/:code", (req, res) => { //Erstelle eine Kategorie
   const code = Number(req.params.code)
   const findRoom = rooms.findIndex(item => item.code === code)
 
@@ -110,7 +128,7 @@ app.post("/create/kategorie/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/kategorien/:code", (req, res) => {
+app.post("/update/kategorien/:code", (req, res) => { //Update eine Kategorie
   const code = Number(req.params.code)
   console.log(req.body)
   const findRoom = rooms.findIndex(item => item.code === code)
@@ -125,7 +143,7 @@ app.post("/update/kategorien/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.delete("/delete/kategorie/:code/:id", (req, res) => {
+app.delete("/delete/kategorie/:code/:id", (req, res) => { //Lösche eine Kategorie
   const code = Number(req.params.code)
   const id = Number(req.params.id)
 
@@ -140,7 +158,7 @@ app.delete("/delete/kategorie/:code/:id", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/create/frage/:code/:kategorie", (req, res) => {
+app.post("/create/frage/:code/:kategorie", (req, res) => { //Erstelle eine Frage
   const code = Number(req.params.code)
   const kategorie = Number(req.params.kategorie)
 
@@ -175,7 +193,7 @@ app.post("/create/frage/:code/:kategorie", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/fragen/:code/:kategorie", (req, res) => {
+app.post("/update/fragen/:code/:kategorie", (req, res) => { //Update eine Frage
   const code = Number(req.params.code)
   const kategorie = Number(req.params.kategorie)
 
@@ -196,7 +214,7 @@ app.post("/update/fragen/:code/:kategorie", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.delete("/delete/frage/:code/:kategorie/:id", (req, res) => {
+app.delete("/delete/frage/:code/:kategorie/:id", (req, res) => { //Lösche eine Frage
   const code = Number(req.params.code)
   const kategorie = Number(req.params.kategorie)
   const id = Number(req.params.id)
@@ -218,10 +236,45 @@ app.delete("/delete/frage/:code/:kategorie/:id", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/admin/update/menge/:code", (req, res) => {
-  const fragen = req.body.fragen
-  const kategorien = req.body.kategorien
+app.post("/create/spieler/:code", (req, res) => { //Erstelle einen Spieler
   const code = Number(req.params.code)
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  if (rooms[findRoom].spieler.length === rooms[findRoom].maxSpieler) {
+    return res.status(400).json({ message: "Die maximale Anzahl an Spielern wurde erreicht!" })
+  }
+
+  const newId = rooms[findRoom].spieler.length > 0 ? rooms[findRoom].spieler.length + 1 : 1
+
+  if (rooms[findRoom].spieler.length < rooms[findRoom].maxSpieler) {
+    rooms[findRoom].spieler.push({ id: newId, name: "", punkte: 0 })
+  }
+
+  return res.status(200).json(rooms[findRoom])
+})
+
+app.post("/update/spieler/:code", (req, res) => { //Update eine Kategorie
+  const code = Number(req.params.code)
+  console.log(req.body)
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+
+  rooms[findRoom] = { ...rooms[findRoom], spieler: req.body }
+
+  return res.status(200).json(rooms[findRoom])
+})
+
+app.delete("/delete/spieler/:code/:id", (req, res) => { //Lösche einen Spieler
+  const code = Number(req.params.code)
+  const id = Number(req.params.id)
 
   const findRoom = rooms.findIndex(item => item.code === code)
 
@@ -229,13 +282,12 @@ app.post("/admin/update/menge/:code", (req, res) => {
     return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
   }
 
-  rooms[findRoom] = { ...rooms[findRoom], maxKategorien: kategorien, maxFragen: fragen }
+  rooms[findRoom].spieler = rooms[findRoom].spieler.filter(item => item.id !== id).map((item, index) => ({ ...item, id: index + 1 }))
 
-  console.log("Der Raum " + rooms[findRoom].code + " hat neue Mengen bekommen: " + kategorien + " Kategorien & " + fragen + " Fragen pro Kategorie")
-  return res.status(200).json(rooms)
+  return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/quizArt/:code", (req, res) => {
+app.post("/update/quizArt/:code", (req, res) => { //Update Quiz-Art
   const code = Number(req.params.code)
 
   const findRoom = rooms.findIndex(item => item.code === code)
@@ -249,7 +301,7 @@ app.post("/update/quizArt/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/sortPunkte/:code", (req, res) => {
+app.post("/update/sortPunkte/:code", (req, res) => { //Update Sortierung nach Punkten
   const code = Number(req.params.code)
 
   const findRoom = rooms.findIndex(item => item.code === code)
@@ -263,7 +315,7 @@ app.post("/update/sortPunkte/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/sortRichtung/:code", (req, res) => {
+app.post("/update/sortRichtung/:code", (req, res) => { //Update Sortierrichtung von der Sortierung nach Punkten
   const code = Number(req.params.code)
 
   const findRoom = rooms.findIndex(item => item.code === code)
@@ -277,7 +329,7 @@ app.post("/update/sortRichtung/:code", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.post("/update/status/:code/:kategorie/:frage", (req, res) => {
+app.post("/update/status/:code/:kategorie/:frage", (req, res) => { //Update den Status einer Frage
   const code = Number(req.params.code)
   const kategorie = Number(req.params.kategorie)
   const frage = Number(req.params.frage)
@@ -305,6 +357,114 @@ app.post("/update/status/:code/:kategorie/:frage", (req, res) => {
   return res.status(200).json(rooms[findRoom])
 })
 
-app.listen(port, () => {
+//Punkte geben/entfernen
+
+app.post("/punkte/add/:code/:kategorie/:frage/:spieler", (req, res) => {
+  const code = Number(req.params.code)
+  const kategorie = Number(req.params.kategorie)
+  const frage = Number(req.params.frage)
+  const spieler = Number(req.params.spieler)
+
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === kategorie)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
+  }
+
+  const findFrage = rooms[findRoom].kategorien[findKategorie].fragen.findIndex(item => item.id === frage)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde keine Frage gefunden" })
+  }
+
+  const findSpieler = rooms[findRoom].spieler.findIndex(item => item.id === spieler)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde kein Spieler gefunden" })
+  }
+
+  rooms[findRoom].spieler[findSpieler] = { ...rooms[findRoom].spieler[findSpieler], punkte: rooms[findRoom].spieler[findSpieler].punkte + rooms[findRoom].kategorien[findKategorie].fragen[findFrage].punkte }
+
+  return res.status(200).json(rooms[findRoom])
+})
+
+app.post("/punkte/remove/:code/:kategorie/:frage/:spieler", (req, res) => {
+  const code = Number(req.params.code)
+  const kategorie = Number(req.params.kategorie)
+  const frage = Number(req.params.frage)
+  const spieler = Number(req.params.spieler)
+
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  const findKategorie = rooms[findRoom].kategorien.findIndex(item => item.id === kategorie)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde keine Kategorie gefunden" })
+  }
+
+  const findFrage = rooms[findRoom].kategorien[findKategorie].fragen.findIndex(item => item.id === frage)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde keine Frage gefunden" })
+  }
+
+  const findSpieler = rooms[findRoom].spieler.findIndex(item => item.id === spieler)
+
+  if (findKategorie === -1) {
+    return res.status(400).json({ message: "Es wurde kein Spieler gefunden" })
+  }
+
+  rooms[findRoom].spieler[findSpieler] = { ...rooms[findRoom].spieler[findSpieler], punkte: rooms[findRoom].spieler[findSpieler].punkte - rooms[findRoom].kategorien[findKategorie].fragen[findFrage].punkte }
+
+  return res.status(200).json(rooms[findRoom])
+})
+
+//Restart Game
+
+app.post("/rooms/restart/:code", (req, res) => {
+  const code = Number(req.params.code)
+
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  rooms[findRoom] = {...rooms[findRoom], spieler: rooms[findRoom].spieler.map(item => ({...item, punkte: 0})), kategorien: rooms[findRoom].kategorien.map(item => ({...item, fragen: item.fragen.map(id => ({...id, status: false}))}))}
+  return res.status(200).json(rooms[findRoom])
+})
+
+//Admin Features
+
+app.post("/admin/update/menge/:code", (req, res) => { //Update die Raum-Menge von einem Raum als Admin
+  const fragen = req.body.fragen
+  const kategorien = req.body.kategorien
+  const spieler = req.body.spieler
+
+  const code = Number(req.params.code)
+
+  const findRoom = rooms.findIndex(item => item.code === code)
+
+  if (findRoom === -1) {
+    return res.status(400).json({ message: "Es wurde kein Raum gefunden" })
+  }
+
+  rooms[findRoom] = { ...rooms[findRoom], maxKategorien: kategorien, maxFragen: fragen, maxSpieler: spieler }
+
+  console.log("Der Raum " + rooms[findRoom].code + " hat neue Mengen bekommen: " + kategorien + " Kategorien & " + fragen + " Fragen pro Kategorie sowie eine maximale Anzahl von " + spieler + " Spielern.")
+  return res.status(200).json(rooms)
+})
+
+app.listen(port, () => { //Starte das Backend
   console.log(`Backend-Server wurde auf Port ${port} gestartet!`)
 })
