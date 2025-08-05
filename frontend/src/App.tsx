@@ -1,3 +1,5 @@
+//Import useState
+
 import { useState } from 'react'
 
 //Import MUI-Components
@@ -5,7 +7,7 @@ import Box from '@mui/material/Box';
 import Fab from '@mui/material/Fab';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { Typography } from '@mui/material';
+import { Typography} from '@mui/material';
 import Chip from '@mui/material/Chip';
 
 //Import MUI-Icons
@@ -20,6 +22,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface Room {
   code: number
@@ -75,6 +78,7 @@ export default function App() {
 
   // Variablen für die Räume
   const [roomID, setRoomID] = useState("")
+  const [unSaved, setUnSaved] = useState<number[]>([])
 
   //Variablen für den aktuellen Raum
   const [room, setRoom] = useState<Room>()
@@ -528,7 +532,7 @@ export default function App() {
                                 }) : item.fragen).map((singleItem, i) => (
                                   <tr key={i}>
                                     <td>
-                                      <Fab style={{ backgroundColor: singleItem.status ? "#3936efff" : "#b0afecff" , boxShadow: singleItem.status ? "none" : "default"}} variant="extended" onClick={() => {
+                                      <Fab style={{ backgroundColor: singleItem.status ? "#3936efff" : "#b0afecff", boxShadow: singleItem.status ? "none" : "default" }} variant="extended" onClick={() => {
                                         setSelectedFrage(singleItem.id)
                                         setSelectedKategorie(item.id)
                                         if (room.quizArt === "f-a") {
@@ -599,7 +603,7 @@ export default function App() {
                           }
                         })
                     }
-                  }} label={room?.quizArt === "f-a" ? "Antwort anzeigen" : "Zurück zum Board"} sx={{ backgroundColor: "aqua",'&:hover':{backgroundColor:"aqua"} }} />
+                  }} label={room?.quizArt === "f-a" ? "Antwort anzeigen" : "Zurück zum Board"} sx={{ backgroundColor: "aqua", '&:hover': { backgroundColor: "aqua" } }} />
                 </Box>
               </Box>
             </>
@@ -644,7 +648,7 @@ export default function App() {
                     if (room?.quizArt === "a-f") {
                       setAnzeige2("frage")
                     }
-                  }} label={room?.quizArt === "f-a" ? "Zurück zum Board" : "Frage anzeigen"} sx={{ backgroundColor: "aqua",'&:hover':{backgroundColor:"aqua"} }} />
+                  }} label={room?.quizArt === "f-a" ? "Zurück zum Board" : "Frage anzeigen"} sx={{ backgroundColor: "aqua", '&:hover': { backgroundColor: "aqua" } }} />
                 </Box>
               </Box>
             </>
@@ -667,54 +671,54 @@ export default function App() {
                             </tr>
                             <tr>
                               <td>
-                                <Box sx={{ minHeight: '4vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                <b>Punkte:</b>&nbsp;{item.punkte}
+                                <Box sx={{ minHeight: '4vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                  <b>Punkte:</b>&nbsp;{item.punkte}
                                 </Box>
                               </td>
                             </tr>
                             <Box sx={{ minHeight: '7vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 0.4 } }}>
-                            {(room.quizArt === "f-a" && anzeige2 === "antwort") || (room.quizArt === "a-f" && anzeige2 === "frage") ? <>
-                              <Fab size="small" sx={{backgroundColor:"lime",'&:hover':{backgroundColor:"lime"}}} onClick={() => {
-                                fetch(`${backend}/punkte/add/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
-                                  method: 'POST',
-                                })
-                                  .then(async res => {
-                                    const data = await res.json()
-                                    if (!res.ok) {
-                                      alert(data.message)
-                                      console.log(data.message)
-                                      return null
-                                    }
-                                    return data
+                              {(room.quizArt === "f-a" && anzeige2 === "antwort") || (room.quizArt === "a-f" && anzeige2 === "frage") ? <>
+                                <Fab size="small" sx={{ backgroundColor: "lime", '&:hover': { backgroundColor: "lime" } }} onClick={() => {
+                                  fetch(`${backend}/punkte/add/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
+                                    method: 'POST',
                                   })
-                                  .then(data => {
-                                    if (data) {
-                                      setRoom(data)
-                                      setEditRoom(prev => reloadEditRoom(prev, data))
-                                    }
+                                    .then(async res => {
+                                      const data = await res.json()
+                                      if (!res.ok) {
+                                        alert(data.message)
+                                        console.log(data.message)
+                                        return null
+                                      }
+                                      return data
+                                    })
+                                    .then(data => {
+                                      if (data) {
+                                        setRoom(data)
+                                        setEditRoom(prev => reloadEditRoom(prev, data))
+                                      }
+                                    })
+                                }} ><AddIcon /></Fab>
+                                <Fab size="small" sx={{ backgroundColor: "red", color: "white", '&:hover': { backgroundColor: "red", color: "white" } }} onClick={() => {
+                                  fetch(`${backend}/punkte/remove/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
+                                    method: 'POST',
                                   })
-                              }} ><AddIcon /></Fab>
-                              <Fab size="small" sx={{backgroundColor:"red", color:"white",'&:hover':{backgroundColor:"red", color:"white"}}} onClick={() => {
-                                fetch(`${backend}/punkte/remove/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
-                                  method: 'POST',
-                                })
-                                  .then(async res => {
-                                    const data = await res.json()
-                                    if (!res.ok) {
-                                      alert(data.message)
-                                      console.log(data.message)
-                                      return null
-                                    }
-                                    return data
-                                  })
-                                  .then(data => {
-                                    if (data) {
-                                      setRoom(data)
-                                      setEditRoom(prev => reloadEditRoom(prev, data))
-                                    }
-                                  })
-                              }} ><RemoveIcon /></Fab>
-                            </> : ""}
+                                    .then(async res => {
+                                      const data = await res.json()
+                                      if (!res.ok) {
+                                        alert(data.message)
+                                        console.log(data.message)
+                                        return null
+                                      }
+                                      return data
+                                    })
+                                    .then(data => {
+                                      if (data) {
+                                        setRoom(data)
+                                        setEditRoom(prev => reloadEditRoom(prev, data))
+                                      }
+                                    })
+                                }} ><RemoveIcon /></Fab>
+                              </> : ""}
                             </Box>
                           </tbody>
                         </table>
@@ -731,163 +735,23 @@ export default function App() {
       {/* Board bearbeiten */}
       <>
         {anzeige !== "edit" ? "" : <>
-          <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
-          <button onClick={() => {
-            fetch(`${backend}/rooms/${room?.code}`, {
-              method: 'GET',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>Neu laden</button>
-          <br /><br /><br />
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "red" }} onClick={() => {
+              setAnzeige("room")
+              setUnSaved([])
+            }}>
+              <ArrowBackIcon />
+            </Fab>
+            {unSaved.length > 0 ? <Chip label={"Du hast ungespeicherte Änderungen"} sx={{ backgroundColor: "red", color: "white" }} /> : ""}
 
-
-
-          <h1>Einstellungen</h1>
-
-          {/* Change Quiz Art */}
-          Du möchtest lieber das Orignale Jeopardy spielen?&nbsp;
-          <button onClick={() => {
-            fetch(`${backend}/update/quizArt/${room?.code}`, {
-              method: 'POST',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>{room?.quizArt === "f-a" ? "ㅤ" : "X"}</button>
-          <br />
-          (<b>Aktuelle Version:</b> {room?.quizArt === "f-a" ? "Normales Quiz Prinzip - Zuerst die Frage, dann die Antwort" : "Jeopardy Prinzip - Zuerst die Antwort, dann die Frage"})
-
-          <br /><br /><br />
-
-          Fragen auf dem Board nach Punkten sortieren?&nbsp;
-          <button onClick={() => {
-            fetch(`${backend}/update/sortPunkte/${room?.code}`, {
-              method: 'POST',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>{!room?.sortPunkte ? "ㅤ" : "X"}</button>
-          {!room?.sortPunkte ? "" : <button onClick={() => {
-            fetch(`${backend}/update/sortRichtung/${room?.code}`, {
-              method: 'POST',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>{room?.sortRichtung === "aufsteigend" ? "↑" : "↓"}</button>}
-          &nbsp;{!room?.sortPunkte ? "" : room.sortRichtung === "aufsteigend" ? "(Aufsteigend)" : "(Absteigend)"}
-
-          <br /><br /><br />
-
-          <h1>Kategorien</h1>
-
-          <button onClick={() => { //Kategorie hinzufügen
-            fetch(`${backend}/create/kategorie/${room?.code}`, {
-              method: 'POST',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>Neue Kategorie erstellen (Verbleibend: {(room?.maxKategorien || 0) - (room?.kategorien.length || 0)})</button>
-          <br /><br />
-          {room?.kategorien.map(item => ( //Bearbeiten der Kategorien
-            <div key={item.id}>
-              Kategorie {item.id}: <input type="text" placeholder={"Kategorie " + item.id} value={editRoom?.kategorien.find(id => id.id === item.id)?.name} onChange={(e) => { //Kategoriename
-                setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
-              }} />
-              <button onClick={() => { //Löschen der Kategorie
-                fetch(`${backend}/delete/kategorie/${room?.code}/${item.id}`, {
-                  method: 'DELETE',
-                })
-                  .then(async res => {
-                    const data = await res.json()
-                    if (!res.ok) {
-                      alert(data.message)
-                      console.log(data.message)
-                      return null
-                    }
-                    return data
-                  })
-                  .then(data => {
-                    if (data) {
-                      setRoom(data)
-                      setEditRoom(prev => reloadEditRoom(prev, data))
-                    }
-                  })
-              }}>Löschen</button>
-              <br />
-            </div>
-          ))}
-          <br />
-          {room?.kategorien.length || -1 > 0 ?
-            <button onClick={() => { //Speichern der Kategorien
-              fetch(`${backend}/update/kategorien/${room?.code}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editRoom?.kategorien)
+          </Box>
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
+              Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}
+            </Typography>
+            <Fab sx={{ backgroundColor: "aqua" }} size="small" onClick={() => {
+              fetch(`${backend}/rooms/${room?.code}`, {
+                method: 'GET',
               })
                 .then(async res => {
                   const data = await res.json()
@@ -904,18 +768,18 @@ export default function App() {
                     setEditRoom(prev => reloadEditRoom(prev, data))
                   }
                 })
-            }}>Speichern</button> : ""}
-          <br /><br /><br />
+            }}><CachedIcon /></Fab>
+          </Box>
 
 
+          <Box sx={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <h1>Einstellungen</h1>
 
-          <h1>Fragen</h1>
-          {room?.kategorien.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
-            <div key={item.id}>
-              Fragen zur Kategorie: {item.name}
-              <br />
-              <button onClick={() => { //Frage hinzufügen
-                fetch(`${backend}/create/frage/${room?.code}/${item.id}`, {
+            {/* Change Quiz Art */}
+            <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              Du möchtest lieber das Orignale Jeopardy spielen?&nbsp;
+              <Fab sx={{ backgroundColor: room?.quizArt === "a-f" ? "lime" : "default" }} size="small" onClick={() => {
+                fetch(`${backend}/update/quizArt/${room?.code}`, {
                   method: 'POST',
                 })
                   .then(async res => {
@@ -933,51 +797,17 @@ export default function App() {
                       setEditRoom(prev => reloadEditRoom(prev, data))
                     }
                   })
-              }}>Neue Frage erstellen (Verbleibend: {(room?.maxFragen || 0) - (item.fragen.length)})</button>
-              <br /><br />
-              {item.fragen.map(frage => ( //Bearbeiten der Fragen
-                <div key={frage.id}>
-                  Frage {frage.id}:
-                  <br />
-                  <input type="text" placeholder="Frage" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.frage} onChange={(e) => {
-                    setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, frage: e.target.value } : res) } : id) } : prevRoom)
-                  }} />
-                  <input type="text" placeholder="Antwort" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.antwort} onChange={(e) => {
-                    setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, antwort: e.target.value } : res) } : id) } : prevRoom)
-                  }} />
-                  <input type="number" placeholder="Punkte" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.punkte} onChange={(e) => {
-                    setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, punkte: Number(e.target.value) } : res) } : id) } : prevRoom)
-                  }} />
-                  <button onClick={() => {
-                    fetch(`${backend}/delete/frage/${room?.code}/${item.id}/${frage.id}`, {
-                      method: 'DELETE',
-                    })
-                      .then(async res => {
-                        const data = await res.json()
-                        if (!res.ok) {
-                          alert(data.message)
-                          console.log(data.message)
-                          return null
-                        }
-                        return data
-                      })
-                      .then(data => {
-                        if (data) {
-                          setRoom(data)
-                          setEditRoom(prev => reloadEditRoom(prev, data))
-                        }
-                      })
-                  }}>Löschen</button>
-                  <br /><br />
-                </div>
-              ))}
+              }}>{room?.quizArt === "f-a" ? "ㅤ" : <CheckIcon />}</Fab>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 0 } }}>
+              (<b>Aktuelle Version:&nbsp;</b> {room?.quizArt === "f-a" ? "Normales Quiz Prinzip - Zuerst die Frage, dann die Antwort" : "Jeopardy Prinzip - Zuerst die Antwort, dann die Frage"})
+            </Box>
 
-              <br />
-              <button onClick={() => { //Speichern der Fragen
-                fetch(`${backend}/update/fragen/${room?.code}/${item.id}`, {
+            <Box sx={{ minHeight: '15vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              Fragen auf dem Board nach Punkten sortieren?&nbsp;
+              <Fab sx={{ backgroundColor: room?.sortPunkte ? "lime" : "default" }} size="small" onClick={() => {
+                fetch(`${backend}/update/sortPunkte/${room?.code}`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(editRoom?.kategorien.find(id => id.id === item.id)?.fragen)
                 })
                   .then(async res => {
                     const data = await res.json()
@@ -991,111 +821,261 @@ export default function App() {
                   .then(data => {
                     if (data) {
                       setRoom(data)
-                      setEditRoom(prevEditRoom => reloadEditRoom(prevEditRoom, data))
+                      setEditRoom(prev => reloadEditRoom(prev, data))
                     }
                   })
-              }}>Speichern</button>
-              <br /><br /><br />
-            </div>
+              }}>{!room?.sortPunkte ? "ㅤ" : <CheckIcon />}</Fab>
+              {!room?.sortPunkte ? "" : <Fab size="small" onClick={() => {
+                fetch(`${backend}/update/sortRichtung/${room?.code}`, {
+                  method: 'POST',
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
+                    }
+                  })
+              }}>{room?.sortRichtung === "aufsteigend" ? "↑" : "↓"}</Fab>}
+              &nbsp;{!room?.sortPunkte ? "" : room.sortRichtung === "aufsteigend" ? "(Aufsteigend)" : "(Absteigend)"}
+            </Box>
+          </Box>
 
-          ))}
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <h1>Kategorien</h1>
 
-          <> {/* Zurück zum Board */}
-            <br /><br />
-            <button onClick={() => {
-              setAnzeige("room")
-            }}>Zurück zum Board</button>
-          </>
+            <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              <Fab size="small" sx={{ backgroundColor: room?.kategorien.length !== room?.maxKategorien ? "lime" : "default" }} onClick={() => { //Kategorie hinzufügen
+                fetch(`${backend}/create/kategorie/${room?.code}`, {
+                  method: 'POST',
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
+                    }
+                  })
+              }}><AddIcon /></Fab>
+              <Chip sx={{ backgroundColor: room?.kategorien.length !== room?.maxKategorien ? "lime" : "red" }} label={`(Verbleibend: ${(room?.maxKategorien || 0) - (room?.kategorien.length || 0)})`} />
+            </Box>
+            <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 0.1 } }}>
+              {room?.kategorien.map(item => ( //Bearbeiten der Kategorien
+                <div key={item.id}>
+                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                    Kategorie {item.id}: <TextField autoComplete="off" type="text" placeholder={"Kategorie " + item.id} value={editRoom?.kategorien.find(id => id.id === item.id)?.name} onChange={(e) => { //Kategoriename
+                      if (!unSaved.find(item => item === 0)) {
+                        unSaved.push(0)
+                      }
+                      setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
+                    }} />
+                    <Fab sx={{ backgroundColor: "red" }} onClick={() => { //Löschen der Kategorie
+                      fetch(`${backend}/delete/kategorie/${room?.code}/${item.id}`, {
+                        method: 'DELETE',
+                      })
+                        .then(async res => {
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data.message)
+                            console.log(data.message)
+                            return null
+                          }
+                          return data
+                        })
+                        .then(data => {
+                          if (data) {
+                            setRoom(data)
+                            setEditRoom(prev => reloadEditRoom(prev, data))
+                            if (data.kategorien.length === 0) {
+                              setUnSaved(prev => prev.filter(item => item !== 0))
+                            }
+                          }
+                        })
+                    }}><DeleteIcon /></Fab>
+                    <br />
+                  </Box>
+                </div>
+              ))}
+            </Box>
+            <br />
+            {(room?.kategorien.length ?? -1) > 0 && unSaved.includes(0) ?
+              <Fab size="small" sx={{ backgroundColor: "aqua" }} onClick={() => { //Speichern der Kategorien
+                fetch(`${backend}/update/kategorien/${room?.code}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(editRoom?.kategorien)
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
+                      setUnSaved(prev => prev.filter(item => item !== 0))
+                    }
+                  })
+              }}><SaveIcon /></Fab> : ""}
+            <br /><br /><br />
+          </Box>
+
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            {room?.kategorien.find(item => item.name.length > 0) ? <h1>Fragen</h1> : ""}
+            {room?.kategorien.filter(item => item.name.length > 0).map((item, index) => ( //Fragen für jede Kategorie
+              <div key={item.id}>
+                <Box sx={{ minHeight: '8vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                  Fragen zur Kategorie: {item.name}
+                  <br />
+                  <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 0.2 } }}>
+                    <Fab sx={{ backgroundColor: (room?.maxFragen || 0) - (item.fragen.length) > 0 ? "lime" : "default" }} size="small" onClick={() => { //Frage hinzufügen
+                      fetch(`${backend}/create/frage/${room?.code}/${item.id}`, {
+                        method: 'POST',
+                      })
+                        .then(async res => {
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data.message)
+                            console.log(data.message)
+                            return null
+                          }
+                          return data
+                        })
+                        .then(data => {
+                          if (data) {
+                            setRoom(data)
+                            setEditRoom(prev => reloadEditRoom(prev, data))
+                          }
+                        })
+                    }} ><AddIcon /></Fab>
+                    <Chip sx={{ backgroundColor: (room?.maxFragen || 0) - (item.fragen.length) > 0 ? "lime" : "red" }} label={`(Verbleibend: ${(room?.maxFragen || 0) - (item.fragen.length)})`} />
+                  </Box>
+                </Box>
+                {item.fragen.map(frage => ( //Bearbeiten der Fragen
+                  <div key={frage.id}>
+                    <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                      Frage {frage.id}:
+                      <br />
+                      <TextField autoComplete="off" type="text" placeholder="Frage" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.frage} onChange={(e) => {
+                        if (!unSaved.find(res => res === item.id)) {
+                          unSaved.push(item.id)
+                        }
+                        setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, frage: e.target.value } : res) } : id) } : prevRoom)
+                      }} />
+                      <TextField autoComplete="off" type="text" placeholder="Antwort" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.antwort} onChange={(e) => {
+                        if (!unSaved.find(res => res === item.id)) {
+                          unSaved.push(item.id)
+                        }
+                        setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, antwort: e.target.value } : res) } : id) } : prevRoom)
+                      }} />
+                      <TextField autoComplete="off" type="number" placeholder="Punkte" value={editRoom?.kategorien.find(id => id.id === item.id)?.fragen.find(id => id.id === frage.id)?.punkte} onChange={(e) => {
+                        if (!unSaved.find(res => res === item.id)) {
+                          unSaved.push(item.id)
+                        }
+                        setEditRoom(prevRoom => prevRoom ? { ...prevRoom, kategorien: prevRoom.kategorien.map(id => id.id === item.id ? { ...id, fragen: id.fragen.map(res => res.id === frage.id ? { ...res, punkte: Number(e.target.value) } : res) } : id) } : prevRoom)
+                      }} />
+                      <Fab sx={{ backgroundColor: "red" }} onClick={() => {
+                        fetch(`${backend}/delete/frage/${room?.code}/${item.id}/${frage.id}`, {
+                          method: 'DELETE',
+                        })
+                          .then(async res => {
+                            const data = await res.json()
+                            if (!res.ok) {
+                              alert(data.message)
+                              console.log(data.message)
+                              return null
+                            }
+                            return data
+                          })
+                          .then(data => {
+                            if (data) {
+                              setRoom(data)
+                              setEditRoom(prev => reloadEditRoom(prev, data))
+                              if (data.kategorien.find((kat: Kategorie) => kat.id === item.id).fragen.length === 0) {
+                                setUnSaved(prev => prev.filter(id => id !== item.id));
+                              }
+                            }
+                          })
+                      }}><DeleteIcon /></Fab>
+                    </Box>
+                  </div>
+                ))}
+                <br />
+                {!unSaved.includes(item.id) ? "" :
+                  <Box sx={{ minHeight: '1vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                    <Fab size="small" sx={{ backgroundColor: "aqua" }} onClick={() => { //Speichern der Fragen
+                      fetch(`${backend}/update/fragen/${room?.code}/${item.id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(editRoom?.kategorien.find(id => id.id === item.id)?.fragen)
+                      })
+                        .then(async res => {
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data.message)
+                            console.log(data.message)
+                            return null
+                          }
+                          return data
+                        })
+                        .then(data => {
+                          if (data) {
+                            setRoom(data)
+                            setEditRoom(prevEditRoom => reloadEditRoom(prevEditRoom, data))
+                            setUnSaved(prev => prev.filter(id => id !== item.id))
+                          }
+                        })
+                    }}><SaveIcon /></Fab>
+                  </Box>
+                }
+                <br /><br /><br />
+              </div>
+            ))}
+          </Box>
         </>}
       </>
 
       {/* Spieler bearbeiten */}
       <>
         {anzeige !== "spieler" ? "" : <>
-          <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
-          <button onClick={() => {
-            fetch(`${backend}/rooms/${room?.code}`, {
-              method: 'GET',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>Neu laden</button>
-          <br /><br /><br />
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "red" }} onClick={() => {
+              setAnzeige("room")
+              setUnSaved([])
+            }}>
+              <ArrowBackIcon />
+            </Fab>
+            {unSaved.length > 0 ? <Chip label={"Du hast ungespeicherte Änderungen"} sx={{ backgroundColor: "red", color: "white" }} /> : ""}
 
-          <h1>Spieler</h1>
-
-          <button onClick={() => { //Spieler hinzufügen
-            fetch(`${backend}/create/spieler/${room?.code}`, {
-              method: 'POST',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>Neuen Spieler erstellen (Verbleibend: {(room?.maxSpieler || 0) - (room?.spieler.length || 0)})</button>
-          <br /><br />
-          {room?.spieler.map(item => ( //Bearbeiten des Spielers
-            <div key={item.id}>
-              Spieler {item.id}: <input type="text" placeholder={"Spieler " + item.id} value={editRoom?.spieler.find(id => id.id === item.id)?.name} onChange={(e) => { //Spielername
-                setEditRoom(prevRoom => prevRoom ? { ...prevRoom, spieler: prevRoom.spieler.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
-              }} />
-              <input type="text" placeholder="Punkte" value={editRoom?.spieler.find(id => id.id === item.id)?.punkte} onChange={(e) => { //Spielername
-                setEditRoom(prevRoom => prevRoom ? { ...prevRoom, spieler: prevRoom.spieler.map(id => id.id === item.id ? { ...id, punkte: Number(e.target.value) } : id) } : prevRoom)
-              }} />
-              <button onClick={() => { //Löschen des Spielers
-                fetch(`${backend}/delete/spieler/${room?.code}/${item.id}`, {
-                  method: 'DELETE',
-                })
-                  .then(async res => {
-                    const data = await res.json()
-                    if (!res.ok) {
-                      alert(data.message)
-                      console.log(data.message)
-                      return null
-                    }
-                    return data
-                  })
-                  .then(data => {
-                    if (data) {
-                      setRoom(data)
-                      setEditRoom(prev => reloadEditRoom(prev, data))
-                    }
-                  })
-              }}>Löschen</button>
-              <br />
-            </div>
-          ))}
-          <br />
-          {room?.spieler.length || -1 > 0 ?
-            <button onClick={() => { //Speichern der Spieler
-              fetch(`${backend}/update/spieler/${room?.code}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editRoom?.spieler)
+          </Box>
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
+              Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}
+            </Typography>
+            <Fab sx={{ backgroundColor: "aqua" }} size="small" onClick={() => {
+              fetch(`${backend}/rooms/${room?.code}`, {
+                method: 'GET',
               })
                 .then(async res => {
                   const data = await res.json()
@@ -1112,9 +1092,107 @@ export default function App() {
                     setEditRoom(prev => reloadEditRoom(prev, data))
                   }
                 })
-            }}>Speichern</button> : ""}
-          <br /><br /><br />
-          <button onClick={() => setAnzeige("room")}>Zurück zum Board</button>
+            }}><CachedIcon /></Fab>
+          </Box>
+
+          <Box sx={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <h1>Spieler</h1>
+            <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              <Fab size="small" sx={{ backgroundColor: room?.spieler.length !== room?.maxSpieler ? "lime" : "default" }} onClick={() => { //Spieler hinzufügen
+                fetch(`${backend}/create/spieler/${room?.code}`, {
+                  method: 'POST',
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
+                    }
+                  })
+              }}><AddIcon /></Fab>
+              <Chip label={`(Verbleibend: ${(room?.maxSpieler || 0) - (room?.spieler.length || 0)})`} sx={{ backgroundColor: room?.spieler.length !== room?.maxSpieler ? "lime" : "red" }} />
+            </Box>
+
+            <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 0.1 } }}>
+              {room?.spieler.map(item => ( //Bearbeiten des Spielers
+                <div key={item.id}>
+                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                    Spieler {item.id}: <TextField type="text" placeholder={"Spieler " + item.id} value={editRoom?.spieler.find(id => id.id === item.id)?.name} onChange={(e) => { //Spielername
+                      if (!unSaved.find(item => item === -1)) {
+                        unSaved.push(-1)
+                      }
+                      setEditRoom(prevRoom => prevRoom ? { ...prevRoom, spieler: prevRoom.spieler.map(id => id.id === item.id ? { ...id, name: e.target.value } : id) } : prevRoom)
+                    }} />
+                    <TextField type="text" placeholder="Punkte" value={editRoom?.spieler.find(id => id.id === item.id)?.punkte} onChange={(e) => { //Spielername
+                      if (!unSaved.find(item => item === -1)) {
+                        unSaved.push(-1)
+                      }
+                      setEditRoom(prevRoom => prevRoom ? { ...prevRoom, spieler: prevRoom.spieler.map(id => id.id === item.id ? { ...id, punkte: Number(e.target.value) } : id) } : prevRoom)
+                    }} />
+                    <Fab sx={{ backgroundColor: "red" }} onClick={() => { //Löschen des Spielers
+                      fetch(`${backend}/delete/spieler/${room?.code}/${item.id}`, {
+                        method: 'DELETE',
+                      })
+                        .then(async res => {
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data.message)
+                            console.log(data.message)
+                            return null
+                          }
+                          return data
+                        })
+                        .then(data => {
+                          if (data) {
+                            setRoom(data)
+                            setEditRoom(prev => reloadEditRoom(prev, data))
+                            if (data.spieler.length === 0) {
+                              setUnSaved(prev => prev.filter(item => item !== -1))
+                            }
+                          }
+                        })
+                    }}><DeleteIcon /></Fab>
+                    <br />
+                  </Box>
+                </div>
+              ))}
+            </Box>
+            <br />
+            {(room?.spieler.length ?? -1) > 0 && unSaved.includes(-1) ?
+              <Fab size="small" sx={{ backgroundColor: "aqua" }} onClick={() => { //Speichern der Spieler
+                fetch(`${backend}/update/spieler/${room?.code}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(editRoom?.spieler)
+                })
+                  .then(async res => {
+                    const data = await res.json()
+                    if (!res.ok) {
+                      alert(data.message)
+                      console.log(data.message)
+                      return null
+                    }
+                    return data
+                  })
+                  .then(data => {
+                    if (data) {
+                      setRoom(data)
+                      setEditRoom(prev => reloadEditRoom(prev, data))
+                      setUnSaved(prev => prev.filter(item => item !== -1))
+                    }
+                  })
+              }}><SaveIcon /></Fab> : ""}
+          </Box>
+
+
         </>}
       </>
     </div>
