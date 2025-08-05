@@ -1,5 +1,26 @@
 import { useState } from 'react'
 
+//Import MUI-Components
+import Box from '@mui/material/Box';
+import Fab from '@mui/material/Fab';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import { Typography } from '@mui/material';
+import Chip from '@mui/material/Chip';
+
+//Import MUI-Icons
+import CheckIcon from '@mui/icons-material/Check';
+import LoginIcon from '@mui/icons-material/Login';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import CachedIcon from '@mui/icons-material/Cached';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import SaveIcon from '@mui/icons-material/Save';
+import PersonIcon from '@mui/icons-material/Person';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Add';
+
 interface Room {
   code: number
   maxKategorien: number
@@ -103,358 +124,246 @@ export default function App() {
       {/* Admin Login */}
       <>
         {anzeige !== "adminLogin" ? "" : <>
-          <input type="text" placeholder="Admin Passwort" value={pw} onChange={(e) => setPw(e.target.value)} />
-          <button onClick={() => {
-            fetch(`${backend}/login/admin`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pw: pw })
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
-                  alert("Es ist ein Fehler aufgetreten: " + data.message)
-                  return null
-                }
-                return data
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "red" }} onClick={() => setAnzeige("login")}>
+              <ArrowBackIcon />
+            </Fab>
+          </Box>
+          <Box sx={{ minHeight: '30vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '4rem', fontWeight: 'bold' }}>
+              Admin-Login
+            </Typography>
+          </Box>
+          <Box sx={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <TextField autoComplete="off" variant="outlined" type="password" label="Admin Passwort" value={pw} onChange={(e) => setPw(e.target.value)} />
+            <Fab sx={{ backgroundColor: "lime" }} size="small" onClick={() => {
+              fetch(`${backend}/login/admin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pw: pw })
               })
-              .then(data => {
-                if (data) {
-                  setRooms(data)
-                  setAnzeige("admin")
-                  setPw("")
-                }
-              })
-          }}>
-            Login
-          </button>
-          <br /><br /><br />
-          <button onClick={() => setAnzeige("login")}>Zurück</button>
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                    alert("Es ist ein Fehler aufgetreten: " + data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setRooms(data)
+                    setAnzeige("admin")
+                    setPw("")
+                  }
+                })
+            }}>
+              <CheckIcon />
+            </Fab>
+            <br /><br /><br />
+          </Box>
         </>}
       </>
 
       {/* Admin Control */}
       <>
         {anzeige !== "admin" ? "" : <>
-          <h1>Admin Panel</h1>
-          <button onClick={() => setAnzeige("login")}>Abmelden</button>
-          <br /><br /><br />
-          <button onClick={() => {
-            fetch(`${backend}/rooms`, {
-              method: 'GET',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
-                  alert("Es ist ein Fehler aufgetreten: " + data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  console.log("Es wurden neue Daten runtergeladen!")
-                  setRooms(data)
-                }
-              })
-          }}>Räume Aktualisieren</button>
-          <br /><br /><br />
-          <table>
-            <thead>
-              <tr>
-                <th>Raum</th>
-                <th>Bearbeiten</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rooms.map((item) => (
-                <tr key={item.code}>
-                  <td>{item.code}</td>
-                  <td><button onClick={() => {
-                    setAnzeige("adminEdit")
-                    setAdminEdit(item.code)
-                    setFragen(item.maxFragen)
-                    setKategorien(item.maxKategorien)
-                    setSpieler(item.maxSpieler)
-                  }}>Bearbeiten</button></td>
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "red" }} onClick={() => setAnzeige("login")}>
+              <ExitToAppIcon />
+            </Fab>
+          </Box>
+          <Box sx={{ minHeight: '20vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '4rem', fontWeight: 'bold' }}>
+              Admin-Panel
+            </Typography>
+          </Box>
+          <Box sx={{ minHeight: '20vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <table>
+              <thead>
+                <tr style={{ backgroundColor: "#dac5c5ff", textAlign: "center", padding: "8px", border: '2px solid black' }}>
+                  <th style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                      <h3>Räume</h3>
+                      <Fab sx={{ backgroundColor: "lightgray" }} size="small" onClick={() => {
+                        fetch(`${backend}/rooms`, {
+                          method: 'GET',
+                        })
+                          .then(async res => {
+                            const data = await res.json()
+                            if (!res.ok) {
+                              console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                              alert("Es ist ein Fehler aufgetreten: " + data.message)
+                              return null
+                            }
+                            return data
+                          })
+                          .then(data => {
+                            if (data) {
+                              console.log("Es wurden neue Daten runtergeladen!")
+                              setRooms(data)
+                            }
+                          })
+                      }}><CachedIcon /></Fab>
+                    </Box>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rooms.map((item, index) => (
+                  <tr key={item.code} style={{ backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white" }}>
+                    <td style={{ width: "80%", textAlign: "center", padding: "8px", border: '1px solid black' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                        <h3>{item.code}</h3>
+                        <Fab size="small" onClick={() => {
+                          setAnzeige("adminEdit")
+                          setAdminEdit(item.code)
+                          setFragen(item.maxFragen)
+                          setKategorien(item.maxKategorien)
+                          setSpieler(item.maxSpieler)
+                        }}><EditIcon /></Fab>
+                      </Box></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Box>
         </>}
       </>
 
       {/* Admin Room Edit */}
       <>
         {anzeige !== "adminEdit" ? "" : <>
-          <h1>Bearbeite den Raum {adminEdit}</h1>
-          <button onClick={() => setAnzeige("admin")}>Zurück</button>
-          <button onClick={() => {
-            fetch(`${backend}/rooms`, {
-              method: 'GET',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
-                  alert("Es ist ein Fehler aufgetreten: " + data.message)
-                  return null
-                }
-                return data
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "red" }} onClick={() => setAnzeige("admin")}>
+              <ArrowBackIcon />
+            </Fab>
+            <Fab size="small" sx={{ backgroundColor: "aqua" }} onClick={() => {
+              fetch(`${backend}/rooms`, {
+                method: 'GET',
               })
-              .then(data => {
-                if (data) {
-                  console.log("Es wurden neue Daten runtergeladen!")
-                  setRooms(data)
-                }
-              })
-          }}>Raum aktualisieren</button>
-          <br /><br /><br />
-          Kategorien-Menge:&nbsp;
-          <input type="number" placeholder="Fragen-Menge" value={kategorien} onChange={(e) => setKategorien(Number(e.target.value))} />
-          <br />
-          Fragen-Menge:&nbsp;
-          <input type="number" placeholder="Fragen-Menge" value={fragen} onChange={(e) => setFragen(Number(e.target.value))} />
-          <br />
-          Spieler-Menge:&nbsp;
-          <input type="number" placeholder="Spieler-Menge" value={spieler} onChange={(e) => setSpieler(Number(e.target.value))} />
-          <br />
-          <button onClick={() => {
-            fetch(`${backend}/admin/update/menge/${adminEdit}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ kategorien: kategorien, fragen: fragen, spieler: spieler })
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
-                  alert("Es ist ein Fehler aufgetreten: " + data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRooms(data)
-                }
-              })
-          }}>
-            Save
-          </button>
-          <br /><br /><br />
-          <h1>Spielbrett</h1>
-          <table>
-            <tbody>
-              <tr>
-                {rooms.find(item => item.code === adminEdit)?.kategorien.map((item, index) => (
-                  <td key={index}>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>
-                            {item.name.trim() === "" ? '\u00A0' : item.name}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {item.fragen.map((singleItem, i) => (
-                          <tr key={i}>
-                            <td>
-                              Punkte: {singleItem.punkte}
-                              <br />
-                              Frage: {singleItem.frage}
-                              <br />
-                              Antwort: {singleItem.antwort}
-                              <br />
-                              <br />
-                              <br />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-          <br /><br /><br />
-          <h1>Spieler</h1>
-          <table>
-            <tbody>
-              <tr>
-                {rooms.find(item => item.code === adminEdit)?.spieler.map((item, index) => (
-                  <td key={index}>
-                    <table>
-                      <tbody>
-                        <tr>
-                          <td>
-                            Spielername:&nbsp;{item.name}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            Punkte:&nbsp;{item.punkte}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </>}
-      </>
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                    alert("Es ist ein Fehler aufgetreten: " + data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    console.log("Es wurden neue Daten runtergeladen!")
+                    setRooms(data)
+                  }
+                })
+            }}><CachedIcon /></Fab>
 
-      {/* Raum betreten / erstellen */}
-      <>
-
-        {anzeige === "create" ? <> {/* Raum erstellen */}
-          <button onClick={() => {
-            fetch(`${backend}/create/room`, {
-              method: 'POST'
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
+          </Box>
+          <Box sx={{ minHeight: '20vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '4rem', fontWeight: 'bold' }}>
+              Bearbeite den Raum {adminEdit}
+            </Typography>
+          </Box>
+          <Box sx={{ minHeight: '10vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              Kategorien-Menge:&nbsp;
+              <TextField size="small" type="number" placeholder="Fragen-Menge" value={kategorien} onChange={(e) => setKategorien(Number(e.target.value))} />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              Fragen-Menge:&nbsp;
+              <TextField size="small" type="number" placeholder="Fragen-Menge" value={fragen} onChange={(e) => setFragen(Number(e.target.value))} />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              Spieler-Menge:&nbsp;
+              <TextField size="small" type="number" placeholder="Spieler-Menge" value={spieler} onChange={(e) => setSpieler(Number(e.target.value))} />
+            </Box>
+          </Box>
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Fab sx={{ backgroundColor: "aqua" }} size="small" onClick={() => {
+              fetch(`${backend}/admin/update/menge/${adminEdit}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kategorien: kategorien, fragen: fragen, spieler: spieler })
               })
-              .then(data => {
-                if (data) {
-                  setAnzeige("room")
-                  setRoom(data)
-                }
-              })
-          }}>Raum erstellen</button>
-          <br /><br /><br />
-          Du hast bereits einen Raum? <button onClick={() => setAnzeige("login")}>Raum beitreten</button>
-        </> : anzeige === "login" ? <> {/* Raum betreten */}
-          <input type="number" placeholder="Raum ID" value={roomID} onChange={(e) => {
-            const changeRoomID = e.target.value
-            if (changeRoomID.length <= 6) {
-              setRoomID(changeRoomID)
-            }
-          }} />
-          <button onClick={() => {
-            fetch(`${backend}/login/${roomID}`, {
-              method: 'GET'
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  console.log("Es ist ein Fehler aufgetreten: " + data.message)
-                  alert("Es ist ein Fehler aufgetreten: " + data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setAnzeige("room")
-                  setRoom(data)
-                }
-              })
-          }}>Raum beitreten</button>
-          <br /><br /><br />
-          Noch kein Raum vorhanden? <button onClick={() => setAnzeige("create")}>Raum erstellen</button>
-        </> : ""}
-        {anzeige === "create" || anzeige === "login" ? <> {/* Admin Login Button */}
-          <br /><br /><br /><br /><br />
-          Bist du ein Admin?&nbsp;
-          <button onClick={() => setAnzeige("adminLogin")}>
-            Login
-          </button>
-        </> : ""}
-      </>
-
-      {/* Aktiver Raum */}
-      <>
-        {anzeige !== "room" ? "" : <>
-          <h1>Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}</h1>
-          <button onClick={() => setAnzeige("login")}>Zurück</button>
-          <br /><br /><br />
-          <button onClick={() => {
-            setAnzeige("edit")
-            setEditRoom(room)
-
-          }}>Board bearbeiten</button>
-          <button onClick={() => {
-            setAnzeige("spieler")
-            setEditRoom(room)
-
-          }}>Spieler bearbeiten</button>
-          <button onClick={() => {
-            fetch(`${backend}/rooms/restart/${room?.code}`, {
-              method: 'POST',
-            })
-              .then(async res => {
-                const data = await res.json()
-                if (!res.ok) {
-                  alert(data.message)
-                  console.log(data.message)
-                  return null
-                }
-                return data
-              })
-              .then(data => {
-                if (data) {
-                  setRoom(data)
-                  setEditRoom(prev => reloadEditRoom(prev, data))
-                }
-              })
-          }}>Restart Game</button>
-
-          {anzeige2 !== "board" ? "" : //Board
-            <>
-              <table>
-                <tbody>
-                  <tr>
-                    {room?.kategorien.map((item, index) => (
-                      <td key={index}>
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                    alert("Es ist ein Fehler aufgetreten: " + data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setRooms(data)
+                  }
+                })
+            }}>
+              <SaveIcon />
+            </Fab>
+          </Box>
+          <Box sx={{ minHeight: '15vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <br /><br /><br />
+            <h1>Spielbrett</h1>
+            <table>
+              <tbody>
+                <tr style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>
+                  {rooms.find(item => item.code === adminEdit)?.kategorien.map((item, index) => (
+                    <td key={index} style={{ textAlign: "center", padding: "8px" }}>
+                      <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
                         <table>
                           <thead>
                             <tr>
-                              <th>
+                              <th style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>
                                 {item.name.trim() === "" ? '\u00A0' : item.name}
                               </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {(room.sortPunkte ? [...item.fragen].sort((a, b) => {
-                              if (room.sortRichtung === "aufsteigend") {
-                                return a.punkte >= b.punkte ? 1 : -1
-                              } else return a.punkte >= b.punkte ? -1 : 1
-                            }) : item.fragen).map((singleItem, i) => (
+                            {item.fragen.map((singleItem, i) => (
                               <tr key={i}>
-                                <td>
-                                  <button onClick={() => {
-                                    setSelectedFrage(singleItem.id)
-                                    setSelectedKategorie(item.id)
-                                    if (room.quizArt === "f-a") {
-                                      setAnzeige2("frage")
-                                    }
-                                    if (room.quizArt === "a-f") {
-                                      setAnzeige2("antwort")
-                                    }
-                                  }}>
-                                    {singleItem.status ? <s>{singleItem.punkte}</s> : singleItem.punkte}
-                                  </button>
+                                <td style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>
+                                  <b>Punkte:&nbsp;</b> {singleItem.punkte}
+                                  <br />
+                                  <b>Frage:&nbsp;</b> {singleItem.frage}
+                                  <br />
+                                  <b>Antwort:&nbsp;</b> {singleItem.antwort}
+                                  <br />
+                                  <br />
+                                  <br />
                                 </td>
                               </tr>
                             ))}
-                            {[...Array(room.maxFragen - item.fragen.length)].map((_, i2) => (
-                              <tr key={i2}>
-                                <td><button>&nbsp;</button></td>
-                              </tr>
-                            ))}
+                          </tbody>
+                        </table>
+                      </Box>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+            <h1>Spieler</h1>
+            <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              <table>
+                <tbody>
+                  <tr style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>
+                    {rooms.find(item => item.code === adminEdit)?.spieler.map((item, index) => (
+                      <td key={index} style={{ textAlign: "center", padding: "8px" }}>
+                        <table>
+                          <tbody>
+                            <tr>
+                              <td style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>
+                                <b>Spielername:&nbsp;</b>{item.name}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>
+                                <b>Punkte:&nbsp;</b>{item.punkte}
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </td>
@@ -462,139 +371,359 @@ export default function App() {
                   </tr>
                 </tbody>
               </table>
+            </Box>
+          </Box>
+        </>}
+      </>
+
+      {/* Raum betreten / erstellen */}
+      <>
+        {anzeige === "create" || anzeige === "login" ? <> {/* Admin Login Button */}
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "gold" }} onClick={() => setAnzeige("adminLogin")}>
+              <LoginIcon />
+            </Fab>
+          </Box>
+          <Box sx={{ minHeight: '30vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '4rem', fontWeight: 'bold' }}>
+              Jeopardy Quiz-Maker
+            </Typography>
+            <Typography sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
+              ~:~ Create your own Quiz ~:~
+            </Typography>
+          </Box>
+        </> : ""}
+
+        {anzeige === "create" ? <> {/* Raum erstellen */}
+          <Box sx={{ minHeight: '30vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Fab variant="extended" sx={{ backgroundColor: "lime" }} onClick={() => {
+              fetch(`${backend}/create/room`, {
+                method: 'POST'
+              })
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data.message)
+                    console.log(data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setAnzeige("room")
+                    setRoom(data)
+                    setAnzeige2("board")
+                  }
+                })
+            }}>Raum erstellen</Fab>
+          </Box>
+          <Box sx={{ minHeight: '30vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            Du hast bereits einen Raum? <Button variant="outlined" onClick={() => setAnzeige("login")}>Raum beitreten</Button>
+          </Box>
+        </> : anzeige === "login" ? <> {/* Raum betreten */}
+          <Box sx={{ minHeight: '30vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <TextField autoComplete="off" variant="outlined" type="number" label="Raum ID" value={roomID} onChange={(e) => {
+              const changeRoomID = e.target.value
+              if (changeRoomID.length <= 6) {
+                setRoomID(changeRoomID)
+              }
+            }} />
+            <Fab sx={{ backgroundColor: "lime" }} size="small" onClick={() => {
+              fetch(`${backend}/login/${roomID}`, {
+                method: 'GET'
+              })
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    console.log("Es ist ein Fehler aufgetreten: " + data.message)
+                    alert("Es ist ein Fehler aufgetreten: " + data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setAnzeige("room")
+                    setRoom(data)
+                    setAnzeige2("board")
+                  }
+                })
+            }}><CheckIcon /></Fab>
+          </Box>
+          <Box sx={{ minHeight: '30vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            Noch kein Raum vorhanden? <Button variant="outlined" onClick={() => setAnzeige("create")}>Raum erstellen</Button>
+          </Box>
+        </> : ""}
+      </>
+
+      {/* Aktiver Raum */}
+      <>
+        {anzeige !== "room" ? "" : <>
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', '& > :not(style)': { m: 1 } }}>
+            <Fab size="small" sx={{ backgroundColor: "red" }} onClick={() => setAnzeige("login")}>
+              <ExitToAppIcon />
+            </Fab>
+          </Box>
+          <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Typography sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
+              Raum-Code: {room?.code ? room.code : "Es ist ein Fehler aufgetreten! Bitte kontaktiere den Entwickler!"}
+            </Typography>
+          </Box>
+          <Box sx={{ minHeight: '10vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+            <Fab onClick={() => {
+              setAnzeige("edit")
+              setEditRoom(room)
+
+            }}><EditIcon /></Fab>
+            <Fab onClick={() => {
+              setAnzeige("spieler")
+              setEditRoom(room)
+
+            }}><PersonIcon /></Fab>
+            <Fab sx={{ backgroundColor: "red" }} onClick={() => {
+              fetch(`${backend}/rooms/restart/${room?.code}`, {
+                method: 'POST',
+              })
+                .then(async res => {
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data.message)
+                    console.log(data.message)
+                    return null
+                  }
+                  return data
+                })
+                .then(data => {
+                  if (data) {
+                    setRoom(data)
+                    setEditRoom(prev => reloadEditRoom(prev, data))
+                  }
+                })
+            }}><RestartAltIcon /></Fab>
+          </Box>
+
+          {anzeige2 !== "board" ? "" : //Board
+            <>
+              <Box sx={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                {room?.kategorien.length || -1 > 0 ? <table style={{ backgroundColor: "#3936efff", textAlign: "center", padding: "15px", border: '5px solid black', borderSpacing: "50px 0px" }}>
+                  <tbody>
+                    <tr>
+                      {room?.kategorien.map((item, index) => (
+                        <td key={index}>
+                          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                            <table style={{ width: "100%", textAlign: "center" }}>
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <Chip style={{ backgroundColor: "#9291f0ff", padding: "15px" }} label={item.name.trim() === "" ? '\u00A0' : item.name} />
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(room.sortPunkte ? [...item.fragen].sort((a, b) => {
+                                  if (room.sortRichtung === "aufsteigend") {
+                                    return a.punkte >= b.punkte ? 1 : -1
+                                  } else return a.punkte >= b.punkte ? -1 : 1
+                                }) : item.fragen).map((singleItem, i) => (
+                                  <tr key={i}>
+                                    <td>
+                                      <Fab style={{ backgroundColor: singleItem.status ? "#3936efff" : "#b0afecff" , boxShadow: singleItem.status ? "none" : "default"}} variant="extended" onClick={() => {
+                                        setSelectedFrage(singleItem.id)
+                                        setSelectedKategorie(item.id)
+                                        if (room.quizArt === "f-a") {
+                                          setAnzeige2("frage")
+                                        }
+                                        if (room.quizArt === "a-f") {
+                                          setAnzeige2("antwort")
+                                        }
+                                      }}>
+                                        {singleItem.status ? <s>{singleItem.punkte}</s> : <b>{singleItem.punkte}</b>}
+                                      </Fab>
+                                    </td>
+                                  </tr>
+                                ))}
+                                {[...Array(room.maxFragen - item.fragen.length)].map((_, i2) => (
+                                  <tr key={i2}>
+                                    <td><Fab variant="extended" sx={{ backgroundColor: "#3936efff", boxShadow: "none", '&:hover': { backgroundColor: "#3936efff", boxShadow: "none" } }}>&nbsp;</Fab></td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </Box>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table> : ""}
+              </Box>
             </>
           }
 
           {anzeige2 !== "frage" ? "" : //Frage
             <>
-              <h1>{room?.kategorien.find(item => item.id === selectedKategorie)?.fragen.find(item => item.id === selectedFrage)?.frage}</h1>
-              <button onClick={() => {
-                if (room?.quizArt === "f-a") {
-                  setAnzeige2("antwort")
-                }
-                if (room?.quizArt === "a-f") {
-                  fetch(`${backend}/update/status/${room?.code}/${selectedKategorie}/${selectedFrage}`, {
-                    method: 'POST',
-                  })
-                    .then(async res => {
-                      const data = await res.json()
-                      if (!res.ok) {
-                        alert(data.message)
-                        console.log(data.message)
-                        return null
-                      }
-                      return data
-                    })
-                    .then(data => {
-                      if (data) {
-                        setRoom(data)
-                        setAnzeige2("board")
-                      }
-                    })
-                }
-              }}>{room?.quizArt === "f-a" ? "Antwort anzeigen" : "Zurück zum Board"}</button>
+              <Box sx={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                <table style={{ border: '5px solid black', width: "50%", padding: "25px" }}>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <Typography sx={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center' }}>
+                          {room?.kategorien.find(item => item.id === selectedKategorie)?.fragen.find(item => item.id === selectedFrage)?.frage}
+                        </Typography>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                  <Chip onClick={() => {
+                    if (room?.quizArt === "f-a") {
+                      setAnzeige2("antwort")
+                    }
+                    if (room?.quizArt === "a-f") {
+                      fetch(`${backend}/update/status/${room?.code}/${selectedKategorie}/${selectedFrage}`, {
+                        method: 'POST',
+                      })
+                        .then(async res => {
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data.message)
+                            console.log(data.message)
+                            return null
+                          }
+                          return data
+                        })
+                        .then(data => {
+                          if (data) {
+                            setRoom(data)
+                            setAnzeige2("board")
+                          }
+                        })
+                    }
+                  }} label={room?.quizArt === "f-a" ? "Antwort anzeigen" : "Zurück zum Board"} sx={{ backgroundColor: "aqua",'&:hover':{backgroundColor:"aqua"} }} />
+                </Box>
+              </Box>
             </>
           }
 
           {anzeige2 !== "antwort" ? "" : //Antwort
             <>
-              <h1>{room?.kategorien.find(item => item.id === selectedKategorie)?.fragen.find(item => item.id === selectedFrage)?.antwort}</h1>
-              <button onClick={() => {
-                if (room?.quizArt === "f-a") {
-                  fetch(`${backend}/update/status/${room?.code}/${selectedKategorie}/${selectedFrage}`, {
-                    method: 'POST',
-                  })
-                    .then(async res => {
-                      const data = await res.json()
-                      if (!res.ok) {
-                        alert(data.message)
-                        console.log(data.message)
-                        return null
-                      }
-                      return data
-                    })
-                    .then(data => {
-                      if (data) {
-                        setRoom(data)
-                        setAnzeige2("board")
-                      }
-                    })
-                }
-                if (room?.quizArt === "a-f") {
-                  setAnzeige2("frage")
-                }
-              }}>{room?.quizArt === "f-a" ? "Zurück zum Board" : "Frage anzeigen"}</button>
+              <Box sx={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                <table style={{ border: '5px solid black', width: "50%", padding: "25px" }}>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <Typography sx={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center' }}>
+                          {room?.kategorien.find(item => item.id === selectedKategorie)?.fragen.find(item => item.id === selectedFrage)?.antwort}
+                        </Typography>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <Box sx={{ minHeight: '5vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+                  <Chip onClick={() => {
+                    if (room?.quizArt === "f-a") {
+                      fetch(`${backend}/update/status/${room?.code}/${selectedKategorie}/${selectedFrage}`, {
+                        method: 'POST',
+                      })
+                        .then(async res => {
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data.message)
+                            console.log(data.message)
+                            return null
+                          }
+                          return data
+                        })
+                        .then(data => {
+                          if (data) {
+                            setRoom(data)
+                            setAnzeige2("board")
+                          }
+                        })
+                    }
+                    if (room?.quizArt === "a-f") {
+                      setAnzeige2("frage")
+                    }
+                  }} label={room?.quizArt === "f-a" ? "Zurück zum Board" : "Frage anzeigen"} sx={{ backgroundColor: "aqua",'&:hover':{backgroundColor:"aqua"} }} />
+                </Box>
+              </Box>
             </>
           }
 
 
           <> {/* Spieler */}
-            <table>
-              <tbody>
-                <tr>
-                  {room?.spieler.map((item, index) => (
-                    <td key={index}>
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td>
-                              {item.name}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              Punkte:&nbsp;{item.punkte}
-                            </td>
-                          </tr>
-                          {(room.quizArt === "f-a" && anzeige2 === "antwort") || (room.quizArt === "a-f" && anzeige2 === "frage") ? <>
-                            <button onClick={() => {
-                              fetch(`${backend}/punkte/add/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
-                                method: 'POST',
-                              })
-                                .then(async res => {
-                                  const data = await res.json()
-                                  if (!res.ok) {
-                                    alert(data.message)
-                                    console.log(data.message)
-                                    return null
-                                  }
-                                  return data
+            <Box sx={{ minHeight: '10vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 1 } }}>
+              <table style={{ textAlign: "center", padding: "15px", borderSpacing: "50px 0px" }}>
+                <tbody>
+                  <tr>
+                    {room?.spieler.map((item, index) => (
+                      <td key={index}>
+                        <table style={{ padding: "15px" }}>
+                          <tbody>
+                            <tr>
+                              <td>
+                                <Chip label={item.name} sx={{ backgroundColor: "gold", padding: "15px" }} />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <Box sx={{ minHeight: '4vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                                <b>Punkte:</b>&nbsp;{item.punkte}
+                                </Box>
+                              </td>
+                            </tr>
+                            <Box sx={{ minHeight: '7vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', '& > :not(style)': { m: 0.4 } }}>
+                            {(room.quizArt === "f-a" && anzeige2 === "antwort") || (room.quizArt === "a-f" && anzeige2 === "frage") ? <>
+                              <Fab size="small" sx={{backgroundColor:"lime",'&:hover':{backgroundColor:"lime"}}} onClick={() => {
+                                fetch(`${backend}/punkte/add/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
+                                  method: 'POST',
                                 })
-                                .then(data => {
-                                  if (data) {
-                                    setRoom(data)
-                                    setEditRoom(prev => reloadEditRoom(prev, data))
-                                  }
+                                  .then(async res => {
+                                    const data = await res.json()
+                                    if (!res.ok) {
+                                      alert(data.message)
+                                      console.log(data.message)
+                                      return null
+                                    }
+                                    return data
+                                  })
+                                  .then(data => {
+                                    if (data) {
+                                      setRoom(data)
+                                      setEditRoom(prev => reloadEditRoom(prev, data))
+                                    }
+                                  })
+                              }} ><AddIcon /></Fab>
+                              <Fab size="small" sx={{backgroundColor:"red", color:"white",'&:hover':{backgroundColor:"red", color:"white"}}} onClick={() => {
+                                fetch(`${backend}/punkte/remove/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
+                                  method: 'POST',
                                 })
-                            }}>+</button>
-                            <button onClick={() => {
-                              fetch(`${backend}/punkte/remove/${room?.code}/${selectedKategorie}/${selectedFrage}/${item.id}`, {
-                                method: 'POST',
-                              })
-                                .then(async res => {
-                                  const data = await res.json()
-                                  if (!res.ok) {
-                                    alert(data.message)
-                                    console.log(data.message)
-                                    return null
-                                  }
-                                  return data
-                                })
-                                .then(data => {
-                                  if (data) {
-                                    setRoom(data)
-                                    setEditRoom(prev => reloadEditRoom(prev, data))
-                                  }
-                                })
-                            }}>-</button>
-                          </> : ""}
-                        </tbody>
-                      </table>
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
+                                  .then(async res => {
+                                    const data = await res.json()
+                                    if (!res.ok) {
+                                      alert(data.message)
+                                      console.log(data.message)
+                                      return null
+                                    }
+                                    return data
+                                  })
+                                  .then(data => {
+                                    if (data) {
+                                      setRoom(data)
+                                      setEditRoom(prev => reloadEditRoom(prev, data))
+                                    }
+                                  })
+                              }} ><RemoveIcon /></Fab>
+                            </> : ""}
+                            </Box>
+                          </tbody>
+                        </table>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </Box>
           </>
         </>}
       </>
